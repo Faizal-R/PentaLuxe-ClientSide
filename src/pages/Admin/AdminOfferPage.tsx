@@ -246,9 +246,7 @@ const AdminOfferPage: React.FC = () => {
             <th className="border border-gray-300 px-4 py-2 text-left">
               Discount (%)
             </th>
-            <th className="border border-gray-300 px-4 py-2 text-center">
-              Actions
-            </th>
+            
           </tr>
         </thead>
         <tbody>
@@ -263,11 +261,7 @@ const AdminOfferPage: React.FC = () => {
               <td className="border border-gray-300 px-4 py-2">
                 {offer.DiscountPercentage}%
               </td>
-              <td className="border border-gray-300 px-4 py-2 text-center">
-                <button className="bg-red-500 text-white px-2 py-1 rounded-md hover:bg-red-600">
-                  Delete
-                </button>
-              </td>
+             
             </tr>
           ))}
         </tbody>
