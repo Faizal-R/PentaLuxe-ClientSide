@@ -3,12 +3,12 @@ import { AppHttpStatusCodes } from "../types/statusCode";
 import { toast } from "sonner";
 import store from "@/store/store";
 import { logOut } from "@/store/slices/userSlice";
-const baseURL = "https://pentaluxe.shop";
-// const baseURL = "http://localhost:7000";
+// const baseURL = "https://pentaluxe.shop";
+const baseURL = "http://localhost:7000";
+
 const dispatch=store.dispatch
 const api = axios.create({
   baseURL,
-
   headers: {
     "Content-Type": "application/json",
   },
@@ -69,7 +69,7 @@ api.interceptors.response.use(
       console.error("Request Error:", error);
     }
     return Promise.reject(error);
-  }
+  }     
 );
 
 export default api;

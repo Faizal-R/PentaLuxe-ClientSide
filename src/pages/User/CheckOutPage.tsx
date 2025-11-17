@@ -30,7 +30,7 @@ interface IOrderDetails {
   totalAmount: number;
 }
 
-// src/global.d.ts or src/razorpay.d.ts
+
 declare global {
   interface Window {
     Razorpay: {
@@ -280,7 +280,7 @@ const CheckOutPage = () => {
     const {
       data: { data: order },
     } = await api.post("/api/user/create-razorpay-order", { totalPrice });
-
+ 
     const options = {
       key,
       amount: order.amount,
