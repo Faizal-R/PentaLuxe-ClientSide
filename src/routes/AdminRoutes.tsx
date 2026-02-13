@@ -5,27 +5,27 @@ import AdminLayout from "../layout/AdminLayout";
 import ADMIN_ROUTES from "../constants/routes";
 import AdminProtectedRoute from "@/utils/AdminProtectedRoute";
 
-const AdminLoginPage = lazy(() => import("../pages/Admin/AdminLoginPage"));
-const AdminDashboard = lazy(() => import("../pages/Admin/AdminDashboardPage"));
+const AdminLoginPage = lazy(() => import("@/pages/Admin/auth/AdminLoginPage"));
+const AdminDashboard = lazy(() => import("@/pages/Admin/dashboard-sales/AdminDashboardPage"));
 const AdminProductsPage = lazy(
-  () => import("../pages/Admin/AdminProductsPage")
+  () => import('@/pages/Admin/product-category/AdminProductsPage')
 );
-const AdminAddProduct = lazy(() => import("../pages/Admin/AdminAddProduct"));
-const AdminEditProduct = lazy(() => import("../pages/Admin/AdminEditProduct"));
+const AdminAddProduct = lazy(() => import("@/pages/Admin/product-category/AdminAddProduct"));
+const AdminEditProduct = lazy(() => import("@/pages/Admin/product-category/AdminEditProduct"));
 const AdminCategoryPage = lazy(
-  () => import("../pages/Admin/AdminCategoryPage")
+  () => import("../pages/Admin/product-category/AdminCategoryPage")
 );
 const AdminUserManagement = lazy(
-  () => import("../pages/Admin/AdminUserManagement")
+  () => import("@/pages/Admin/managements/AdminUserManagement")
 );
 const AdminOrderMangement = lazy(
-  () => import("../pages/Admin/AdminOrderManagement")
+  () => import("@/pages/Admin/managements/AdminOrderManagement")
 );
 const CouponManagement = lazy(
-  () => import("@/pages/Admin/AdminCouponManagementPage")
+  () => import("@/pages/Admin/managements/AdminCouponManagementPage")
 );
-const OfferManagement = lazy(() => import("@/pages/Admin/AdminOfferPage"));
-const AdminSalesReport = lazy(() => import("@/pages/Admin/AdminSalesReport"));
+const OfferManagement = lazy(() => import("@/pages/Admin/managements/AdminOfferPage"));
+const AdminSalesReport = lazy(() => import("@/pages/Admin/dashboard-sales/AdminSalesReport"));
 
 const AdminRoutes: React.FC = () => (
   <Routes>

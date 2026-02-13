@@ -2,9 +2,9 @@ import React, { lazy } from "react";
 import { Route, Routes } from "react-router-dom";
 import { ROUTES } from "../constants/routes";
 import UserProtectedRoutes from "@/utils/UserProtectedRoutes";
-import ForgotPasswordEmail from "@/pages/User/ForgotPasswordEmail";
-import ForgotOtpPage from "@/pages/User/ForgotOtpPage";
-import ResetPassword from "@/pages/User/ResetPassword";
+import ForgotPasswordEmail from "@/pages/User/auth/ForgotPasswordEmail";
+import ForgotOtpPage from "@/pages/User/auth/ForgotOtpPage";
+import ResetPassword from "@/pages/User/auth/ResetPassword";
 
 
 // import OrderSuccessPage from "@/pages/User/OrderSuccessPage";
@@ -12,28 +12,28 @@ import ResetPassword from "@/pages/User/ResetPassword";
 
 // import Address from "../pages/User/Address";
 
-const HomePage = lazy(() => import("../pages/User/HomePage"));
-const MainLayout = lazy(() => import("../layout/MainLayout"));
-const MinimalLayout = lazy(() => import("../layout/MinimalLayout"));
-const AboutPage = lazy(() => import("../pages/User/AboutPage"));
-const AllProductsPage = lazy(() => import("../pages/User/AllProductsPage"));
-const ProductDetailPage = lazy(() => import("../pages/User/ProductDetailPage"));
-const CategoryPage = lazy(() => import("../pages/User/CategoryPage"));
-const LoginPage = lazy(() => import("../pages/User/LoginPage"));
-const SignupPage = lazy(() => import("../pages/User/SignupPage"));
-const OtpVerifyPage = lazy(() => import("../pages/User/OtpVerifyPage"));
-const UserProfileLayout = lazy(() => import("../layout/UserProfileLayout"));
-const Profile = lazy(() => import("../pages/User/Profile"));
-const Address = lazy(() => import("../pages/User/Address"));
-const AddAndEditAddress = lazy(() => import("../pages/User/AddAndEditAddress"));
-const CheckOutPage = lazy(() => import("../pages/User/CheckOutPage"));
-const OrderPage = lazy(() => import("@/pages/User/OrdersPage"));
-const OrderSuccessPage = lazy(() => import("@/pages/User/OrderSuccessPage"));
-const CartPage = lazy(() => import("../pages/User/CartPage"));
-const OrderDetailsPage = lazy(() => import("@/pages/User/OrderDetailsPage"));
+const HomePage = lazy(() => import("@/pages/User/base/HomePage"));
+const MainLayout = lazy(() => import("@/layout/MainLayout"));
+const MinimalLayout = lazy(() => import("@/layout/MinimalLayout"));
+const AboutPage = lazy(() => import("../pages/User/base/AboutPage"));
+const AllProductsPage = lazy(() => import("@/pages/User/product-category/AllProductsPage"));
+const ProductDetailPage = lazy(() => import("@/pages/User/product-category/ProductDetailPage"));
+const CategoryPage = lazy(() => import("@/pages/User/product-category/CategoryPage"));
+const LoginPage = lazy(() => import("@/pages/User/auth/LoginPage"));
+const SignupPage = lazy(() => import("@/pages/User/auth/SignupPage"));
+const OtpVerifyPage = lazy(() => import("@/pages/User/auth/OtpVerifyPage"));
+const UserProfileLayout = lazy(() => import("@/layout/UserProfileLayout"));
+const Profile = lazy(() => import("@/pages/User/profile/Profile"));
+const Address = lazy(() => import("@/pages/User/profile/Address"));
+const AddAndEditAddress = lazy(() => import("@/pages/User/profile/AddAndEditAddress"));
+const CheckOutPage = lazy(() => import("../pages/User/cart-checkout/CheckOutPage"));
+const OrderPage = lazy(() => import("@/pages/User/order/OrdersPage"));
+const OrderSuccessPage = lazy(() => import("@/pages/User/order/OrderSuccessPage"));
+const CartPage = lazy(() => import("@/pages/User/cart-checkout/CartPage"));
+const OrderDetailsPage = lazy(() => import("@/pages/User/order/OrderDetailsPage"));
 const WalletPage = lazy(() => import("@/pages/User/Wallet"));
 const WishListPage = lazy(() => import("@/pages/User/WishListPage"));
-const ChangePassword = lazy(() => import("@/pages/User/ChangePassword"));
+const ChangePassword = lazy(() => import("@/pages/User/auth/ChangePassword"));
 
 const UserRoutes: React.FC = () => (
   <Routes>

@@ -1,6 +1,6 @@
 import React, {  FormEvent, useEffect, useState } from "react";
 import { IProduct } from "@/types/productTypes";
-import { ICategories } from "./AdminCategoryPage";
+import { ICategories } from "../product-category/AdminCategoryPage";
 import { AxiosError } from "axios";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";

@@ -10,7 +10,7 @@ const App: React.FC = () => {
   return (
     <Router>
       <Toaster
-        position="bottom-center"
+        position="bottom-right"
         richColors
         closeButton
         expand

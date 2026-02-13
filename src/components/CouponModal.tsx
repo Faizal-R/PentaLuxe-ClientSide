@@ -1,4 +1,4 @@
-import { ICoupon } from "@/pages/Admin/AdminCouponManagementPage";
+import { ICoupon } from "@/pages/Admin/managements/AdminCouponManagementPage";
 import React, { useState } from "react";
 import ReactModal from "react-modal";
 import { toast } from "sonner";
