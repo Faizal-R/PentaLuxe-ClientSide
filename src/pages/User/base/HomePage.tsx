@@ -1,14 +1,15 @@
 import { useCallback, useEffect, useState } from "react";
-import Button from "../../components/Button/Button";
+import Button from "@/components/Button/Button";
 import { Link } from "react-router-dom";
-import ProductCard from "../../components/ProductCard";
-import api from "../../services/apiService";
+import ProductCard from "@/components/ProductCard";
+import api from "@/services/apiService";
 import { AxiosError } from "axios";
-import { userProductListing } from "../../utils/endpoints";
+import { userProductListing } from "@/utils/endpoints";
 import { toast } from "sonner";
 
 import { AppHttpStatusCodes } from "@/types/statusCode";
 import { IProduct } from "@/types/productTypes";
+import { USER_API_ROUTES } from "@/routes/api/UserApiRoutes";
 interface Categories {
   _id: string;
   categoryName: string;
@@ -21,31 +22,31 @@ const HomePage = () => {
 
   const getCategories = useCallback(async () => {
     try {
-      const response = await api.get("/api/user/categories");
-      console.log(api.get);
+      const response = await api.get(USER_API_ROUTES.CATEGORIES.GET);
+      console.log("Api Response",response)
       if (response.status === AppHttpStatusCodes.OK) {
-        console.log("category", response);
-        setCategories(response.data.categories);
-        console.log(response.data.categories);
+        console.log("category", response.data);
+        setCategories(response.data.data)
       }
     } catch (error) {
       if (error instanceof AxiosError) {
-        toast.error(error.response?.data.message || "Something went wrong");
+        toast.error(error.response?.data.message || "Error Occured While fetching Categories");
       }
     }
-  }, []); // Empty array ensures this function doesn't change
+  }, []);
 
   const getProducts = useCallback(async () => {
     try {
-      const response = await api.get(userProductListing);
-      console.log(response);
+      const response = await api.get(USER_API_ROUTES.PRODUCTS.GET);
+      console.log(response.data);
       const products = response.data.data;
       if (response.data.success) {
         setProducts(products);
       }
     } catch (error) {
+      console.log(error)
       if (error instanceof AxiosError) {
-        toast.error(error.response?.data.message || "Something went wrong");
+        toast.error(error.response?.data.message || "Something went Wrong While Fetching LatestProducts");
       }
     }
   }, []);
@@ -101,10 +102,10 @@ const HomePage = () => {
           ))}
         </div>
       </div>
-      <div className="New-arraivals-container text-center  mt-10">
-        <h1 className="font-Quando text-4xl mb-2">New Arraivals</h1>
+      <div className="New-arrivals-container text-center  mt-10">
+        <h1 className="font-Quando text-4xl mb-2">New Arrivals</h1>
         <p className="font-gilroy ">Find Your New Favorite Fragrance!</p>
-        <div className="New-arraivals-card-container flex justify-center gap-5 px-10 mb-10 mt-5 flex-wrap">
+        <div className="New-arrivals-card-container flex justify-center gap-5 px-10 mb-10 mt-5 flex-wrap">
           {products?.map((product) => (
             <ProductCard key={product._id} product={product} />
           ))}

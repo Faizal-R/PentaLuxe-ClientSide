@@ -13,6 +13,8 @@ import { AxiosError } from "axios";
 import { toast } from "sonner";
 import { Cart } from "@/types/cartProductTypes";
 import { addressValidation } from "@/utils/AddressValidation";
+import AddressModal from "@/components/ui/modal/AddressModal";
+import { USER_API_ROUTES } from "@/routes/api/UserApiRoutes";
 
 interface IOrderItem {
   productId: string;
@@ -130,12 +132,12 @@ const CheckOutPage = () => {
       let res;
 
       if (action === "Add") {
-        res = await api.post("/api/user/address-book", {
+        res = await api.post(USER_API_ROUTES.ADDRESS_BOOK.ADD_ADDRESS_BOOK, {
           formState,
           addressType,
         });
       } else {
-        res = await api.put("/api/user/address-book", {
+        res = await api.put(USER_API_ROUTES.ADDRESS_BOOK.UPDATE_ADDRESS_BOOK, {
           formState,
           addressType,
           addressId,
@@ -184,14 +186,14 @@ const CheckOutPage = () => {
   };
 
   const getUserAddresses = async () => {
-    const res = await api.get("/api/user/address-book");
+    const res = await api.get(USER_API_ROUTES.ADDRESS_BOOK.GET);
     if (res.status === AppHttpStatusCodes.OK) {
       setAddresses(res.data.data);
     }
   };
 
   const handleWalletPaymentAndPlaceOrder = async (orderDetails: any) => {
-    const res = await api.post("/api/user/wallet-payment", {
+    const res = await api.post(USER_API_ROUTES.PAYMENT.WALLET_PAYMENT, {
       orderDetails,
       totalPrice,
     });
@@ -276,10 +278,10 @@ const CheckOutPage = () => {
   const handleRazorpayPayment = async (orderDetails: IOrderDetails) => {
     const {
       data: { data: key },
-    } = await api.get("/api/user/getkey");
+    } = await api.get("/user/getkey");
     const {
       data: { data: order },
-    } = await api.post("/api/user/create-razorpay-order", { totalPrice });
+    } = await api.post(USER_API_ROUTES.PAYMENT.CREATE_RAZORPAY_ORDER, { totalPrice });
  
     const options = {
       key,
@@ -304,7 +306,7 @@ const CheckOutPage = () => {
     const razorpay = new window.Razorpay(options);
     razorpay.on("payment.failed", async function (response) {
       console.log("payment failed response", response);
-          await api.post("/api/user/razorpay-payment-failure", {
+          await api.post(USER_API_ROUTES.PAYMENT.PAYMENT_FAILURE, {
         response,
         orderDetails,
       });
@@ -320,7 +322,7 @@ const CheckOutPage = () => {
     ) => {
       try {
         const response = await api.post(
-          "/api/user/verify-payment-and-create-order",
+          USER_API_ROUTES.PAYMENT.VERIFY_AND_CREATE_ORDER,
           {
             razorpay_payment_id: paymentResponse.razorpay_payment_id,
             razorpay_order_id: paymentResponse.razorpay_order_id,
@@ -344,7 +346,7 @@ const CheckOutPage = () => {
 
   const processOrderSubmission = async (orderDetails: IOrderDetails) => {
     try {
-      const response = await api.post("/api/user/place-order", orderDetails);
+      const response = await api.post(USER_API_ROUTES.ORDERS.PLACE_ORDER, orderDetails);
 
       if (response.status === AppHttpStatusCodes.CREATED) {
         console.log("order success", response);
@@ -371,7 +373,7 @@ const CheckOutPage = () => {
   };
 
   const getUserCartProducts = async () => {
-    const res = await api.get("/api/user/cart");
+    const res = await api.get(USER_API_ROUTES.CART.GET);
     if (res.status === AppHttpStatusCodes.OK) {
       console.log(res.data);
       setProducts(res.data.data);
@@ -595,94 +597,19 @@ const CheckOutPage = () => {
           </div>
         </div>
       </div>
+      <AddressModal
+  isOpen={isModalOpen}
+  onClose={() => setIsModalOpen(false)}
+  inputsArray={inputsArray}
+  formState={formState}
+  onInputHandler={onInputHandler}
+  addressType={addressType}
+  setAddressType={setAddressType}
+  onAddressHandler={onAddressHandler}
+  isEditMode={isEditMode}
+  addressBtnToggle={addressBtnToggle}
+/>
 
-      <Modal
-        isOpen={isModalOpen}
-        onRequestClose={() => setIsModalOpen(false)}
-        className="bg-none h-screen w-screen"
-      >
-        <h1 className="text-center text-black text-2xl font-Bowly">
-          Add new address
-        </h1>
-        <div className="w-[90%] md:w-[50%] lg:w-[35%] bg-slate-50 mx-auto rounded-lg h-[85%] overflow-auto">
-          <form className="flex flex-col gap-2  py-4 text-black">
-            <div className="flex flex-wrap mt-2 gap-1 justify-center">
-              {inputsArray.map((input) => (
-                <Input
-                  key={input.label}
-                  value={formState[input.label]} // Empty value for design
-                  text={input.label}
-                  type={input.type}
-                  inputHandler={onInputHandler} // Placeholder function
-                />
-              ))}
-            </div>
-            <div className="ml-16">
-              <h1 className="mb-2">Address Type</h1>
-              <div className="address-radio flex gap-3 ">
-                <div className="flex gap-2">
-                  <input
-                    value="home"
-                    type="radio"
-                    name="addressType"
-                    id="home"
-                    checked={addressType === "home"}
-                    onChange={(e) => setAddressType(e.target.value)}
-                  />
-                  <p>Home</p>
-                </div>
-
-                <div className="flex gap-2">
-                  <input
-                    value="work"
-                    type="radio"
-                    name="addressType"
-                    id="work"
-                    checked={addressType === "work"}
-                    onChange={(e) => setAddressType(e.target.value)}
-                  />
-                  <p>Work</p>
-                </div>
-                <div className="flex gap-2">
-                  <input
-                    value="Other"
-                    type="radio"
-                    name="addressType"
-                    id="other"
-                    checked={addressType === "Other"}
-                    onChange={(e) => setAddressType(e.target.value)}
-                  />
-                  <p>Other</p>
-                </div>
-              </div>
-            </div>
-            <div className="buttons flex gap-3 mt-3 items-center ml-16">
-              <button
-                disabled={addressBtnToggle}
-                onClick={(e) =>
-                  onAddressHandler(e, isEditMode ? "Edit" : "Add")
-                }
-                type="button"
-                className={`${
-                  addressBtnToggle
-                    ? "bg-blue-200 cursor-not-allowed"
-                    : "bg-blue-700 hover:bg-blue-600 transition-colors duration-300"
-                } text-white h-10 px-6 rounded-md shadow-md focus:outline-none focus:ring-2 focus:ring-blue-300`}
-              >
-                {isEditMode ? "Edit" : "Create"}
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setIsModalOpen(false)}
-                className="blue uppercase text-blue-800 font-bold"
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
-        </div>
-      </Modal>
     </div>
   );
 };

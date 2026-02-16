@@ -1,5 +1,6 @@
 import EmptyWishlist from "@/components/EmptyWishlist";
 import ProductModal from "@/components/ProductDetailsModal";
+import { USER_API_ROUTES } from "@/routes/api/UserApiRoutes";
 import api from "@/services/apiService";
 import { addToCart } from "@/store/slices/cartSlice";
 import { IProduct } from "@/types/productTypes";
@@ -22,17 +23,16 @@ interface IWishlistItems {
 }
 
 const WishlistPage = () => {
-  const dispatch=useDispatch()
-  const navigate=useNavigate()
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
   const [isModalOpen, setModalOpen] = useState(false);
   const [wishlistItems, setWishlistItems] = useState<IWishlistItems[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<IProduct | null>(null);
   const [selectedVolume, setSelectedVolume] = useState("");
   const getUserWishlist = async () => {
-    const res = await api.get("/api/user/wishlist");
+    const res = await api.get(USER_API_ROUTES.WISHLIST.GET);
     console.log("wishlist", res.data);
     if (res.status === AppHttpStatusCodes.OK) {
-      
       setWishlistItems(res.data.data);
     }
   };
@@ -43,20 +43,23 @@ const WishlistPage = () => {
     setSelectedVolume(volume);
   };
 
-  const AddToCart = async (productId: string, volume: string, stock: number) => {
+  const AddToCart = async (
+    productId: string,
+    volume: string,
+    stock: number,
+  ) => {
     try {
-      const res = await api.post("/api/user/cart", {
+      const res = await api.post(USER_API_ROUTES.CART.ADD_TO_CART, {
         productId,
         volume,
-        stock
+        stock,
       });
       if (res.status === AppHttpStatusCodes.OK) {
-        setModalOpen(false)
+        setModalOpen(false);
         toast.success(res.data.message);
-        
+
         dispatch(addToCart(res.data.data));
-        navigate('/cart')
-        
+        navigate("/cart");
       }
     } catch (error) {
       if (error instanceof AxiosError) {
@@ -65,93 +68,91 @@ const WishlistPage = () => {
     }
   };
 
-  const removeFromWishlist=async(id:string)=>{
+  const removeFromWishlist = async (productId: string) => {
     try {
-      const response = await api.delete(`/api/user/wishlist/${id}`);
-      if(response.status===AppHttpStatusCodes.OK){
-         toast.success(response.data.message)
-       const updatedWishlist=  wishlistItems.filter(item=>item._id.toString()
-       ===id)
-       setWishlistItems(updatedWishlist)
+      const response = await api.delete(
+        USER_API_ROUTES.WISHLIST.REMOVE_FROM_WISHLIST(productId),
+      );
+      if (response.status === AppHttpStatusCodes.OK) {
+        toast.success(response.data.message);
+        const updatedWishlist = wishlistItems.filter(
+          (item) => item._id.toString() === productId,
+        );
+        setWishlistItems(updatedWishlist);
       }
-    } catch (error) {
-      
-    }
-  }
+    } catch (error) {}
+  };
 
   useEffect(() => {
     getUserWishlist();
   }, []);
 
   return (
- <div className="w-full">
-{wishlistItems.length===0|| !wishlistItems?<EmptyWishlist/>:   <div className="max-w-6xl mx-auto p-8">
-      {isModalOpen && (
-        <ProductModal
-          product={selectedProduct}
-          selectedVolume={selectedVolume}
-          onClose={() => setModalOpen(false)}
-      hanldeCart={AddToCart}
-          
-        />
-      )}
+    <div className="w-full">
+      {wishlistItems.length === 0 || !wishlistItems ? (
+        <EmptyWishlist />
+      ) : (
+        <div className="max-w-6xl mx-auto p-8">
+          {isModalOpen && (
+            <ProductModal
+              product={selectedProduct}
+              selectedVolume={selectedVolume}
+              onClose={() => setModalOpen(false)}
+              hanldeCart={AddToCart}
+            />
+          )}
 
-      <h1 className="text-4xl font-bold mb-8 text-center">Your Wishlist</h1>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
-        {wishlistItems?.map((item) => (
-          <div
-            key={item._id}
-            className="bg-white border border-gray-300 rounded-lg shadow-md overflow-hidden transition-transform transform hover:scale-105"
-          >
-            <Link to={`/products/${item.product?._id}`} className="w-full ">
-              {" "}
-              <img
-                src={item.product?.Images[0]}
-                alt={item.product?.Name}
-                className="w-full h-56 object-contain border-b-2 border-gray-100"
-              />
-            </Link>
+          <h1 className="text-4xl font-bold mb-8 text-center">Your Wishlist</h1>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
+            {wishlistItems?.map((item) => (
+              <div
+                key={item._id}
+                className="bg-white border border-gray-300 rounded-lg shadow-md overflow-hidden transition-transform transform hover:scale-105"
+              >
+                <Link to={`/products/${item.product?._id}`} className="w-full ">
+                  {" "}
+                  <img
+                    src={item.product?.Images[0]}
+                    alt={item.product?.Name}
+                    className="w-full h-56 object-contain border-b-2 border-gray-100"
+                  />
+                </Link>
 
-            <div className="p-6">
-              <h2 className="text-xl font-semibold text-gray-800">
-                {item.product.Name}
-              </h2>
-              <p className="text-lg text-gray-600 mt-2">
-                {" "}
-                ₹{item.variant.price || "skldjlkf"}
-              </p>
-              <div className="mt-4 flex space-x-4">
-                <button
-                  onClick={() =>
-                    showProductModalWithVolume(
-                      item.product,
-                      item.variant.volume
-                    )
-                  }
-                  className="bg-blue-500 text-white px-6 py-2 rounded-full shadow hover:bg-blue-600 transition duration-300"
-                >
-                  Move to Cart
-                </button>
-                <button onClick={()=>removeFromWishlist(item.product._id)} className="bg-red-500 text-white px-6 py-2 rounded-full shadow hover:bg-red-600 transition duration-300">
-                  Remove
-                </button>
+                <div className="p-6">
+                  <h2 className="text-xl font-semibold text-gray-800">
+                    {item.product.Name}
+                  </h2>
+                  <p className="text-lg text-gray-600 mt-2">
+                    {" "}
+                    ₹{item.variant.price || "skldjlkf"}
+                  </p>
+                  <div className="mt-4 flex space-x-4">
+                    <button
+                      onClick={() =>
+                        showProductModalWithVolume(
+                          item.product,
+                          item.variant.volume,
+                        )
+                      }
+                      className="bg-blue-500 text-white px-6 py-2 rounded-full shadow hover:bg-blue-600 transition duration-300"
+                    >
+                      Move to Cart
+                    </button>
+                    <button
+                      onClick={() => removeFromWishlist(item.product._id)}
+                      className="bg-red-500 text-white px-6 py-2 rounded-full shadow hover:bg-red-600 transition duration-300"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
               </div>
-            </div>
+            ))}
           </div>
-        ))}
-      </div>
-    </div>}
- </div>
-    
- 
+        </div>
+      )}
+    </div>
   );
 };
 
 export default WishlistPage;
-
-
-
-
-
-
-

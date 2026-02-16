@@ -1,14 +1,14 @@
 import { ChangeEvent, useEffect, useState } from "react";
-import api from "../../services/apiService";
-import { adminProductListing } from "../../utils/endpoints";
+import api from "@/services/apiService";
 import { AxiosError } from "axios";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import DeleteModal from "../../components/DeleteModal";
+import DeleteModal from "@/components/ui/modal/DeleteModal";
 import { IProduct } from "@/types/productTypes";
 import { AppHttpStatusCodes } from "@/types/statusCode";
 import Pagination from "@/components/Pagination";
 import { AlertTriangle } from "lucide-react";
+import { ADMIN_API_ROUTES } from "@/routes/api/AdminApiRoutes";
 
 const AdminProductsPage = () => {
   const [isModalOpen, setModalIsOpen] = useState(false);
@@ -23,10 +23,10 @@ const AdminProductsPage = () => {
 
   const getProducts = async () => {
     try {
-      const res = await api.get(adminProductListing);
+      const res = await api.get(ADMIN_API_ROUTES.PRODUCTS_MANAGEMENT.GET_ALL);
       if (res.data.success) {
-        setProducts(res.data.products);
-        setDisplayedProducts(res.data.products.slice(0, itemsPerPage)); // Initial page display
+        setProducts(res.data.data);
+        setDisplayedProducts(res.data.data.slice(0, itemsPerPage)); // Initial page display
       }
     } catch (error) {
       if (error instanceof AxiosError) {
@@ -43,12 +43,12 @@ const AdminProductsPage = () => {
     setItemId(id);
   };
 
-  const onProductDelete = async (id: string) => {
+  const onProductDelete = async (productId: string) => {
     try {
-      const res = await api.delete(`/api/admin/products/${id}`);
+      const res = await api.delete(ADMIN_API_ROUTES.PRODUCTS_MANAGEMENT.DELETE_PRODUCT(productId));
       if (res.data.success) {
         setProducts(
-          products.filter((product) => product._id.toString() !== id)
+          products.filter((product) => product._id.toString() !== productId)
         );
         toast.success(res.data.message);
       }
@@ -76,10 +76,10 @@ const AdminProductsPage = () => {
       return;
     }
     try {
-      const res = await api.post("/api/admin/search-product", { text: input });
+      const res = await api.post(ADMIN_API_ROUTES.PRODUCTS_MANAGEMENT.SEARCH_PRODUCTS, { text: input });
       if (res.status === AppHttpStatusCodes.OK) {
-        setSearchedProducts(res.data.products);
-        setDisplayedProducts(res.data.products.slice(0, itemsPerPage)); // Reset displayed products based on search
+        setSearchedProducts(res.data.data);
+        setDisplayedProducts(res.data.data.slice(0, itemsPerPage)); // Reset displayed products based on search
       }
     } catch (error) {
       if (error instanceof AxiosError) {

@@ -1,12 +1,13 @@
 import React, { ChangeEvent, useEffect, useState } from "react";
-import api from "../../services/apiService";
-import ImageCropper from "../../components/ImageCropper/ImageCropper";
-import { convertBlobUrlsToFiles } from "../../utils/fileUpload";
-import Button from "../../components/Button/Button";
+import api from "@/services/apiService";
+import ImageCropper from "@/components/ImageCropper/ImageCropper";
+import { convertBlobUrlsToFiles } from "@/utils/fileUpload";
+import Button from "@/components/Button/Button";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { AxiosError } from "axios";
 import { PulseLoader } from "react-spinners";
+import { ADMIN_API_ROUTES } from "@/routes/api/AdminApiRoutes";
 
 type SizeInfo = {
   price: string; // Quantity as string
@@ -181,7 +182,7 @@ const AdminAddProduct = () => {
       });
       setLoading(true);
 
-      const response = await api.post("/api/admin/products", formData, {
+      const response = await api.post(ADMIN_API_ROUTES.PRODUCTS_MANAGEMENT.CREATE_PRODUCT, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -200,9 +201,9 @@ const AdminAddProduct = () => {
 
   const getCategories = async () => {
     try {
-      const res = await api.get("/api/admin/categories");
+      const res = await api.get(ADMIN_API_ROUTES.CATEGORIES_MANAGEMENT.GET);
       if (res.data.success) {
-        setCategories(res.data.categories);
+        setCategories(res.data.data);
       }
     } catch (error) {
       console.error("Error fetching categories:", error);

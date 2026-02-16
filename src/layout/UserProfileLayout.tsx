@@ -6,6 +6,7 @@ import {   NavLink, Outlet, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useDispatch } from "react-redux";
 import { logOut } from "@/store/slices/userSlice";
+import { USER_API_ROUTES } from "@/routes/api/UserApiRoutes";
 
 interface IUser {
   username: string;
@@ -52,7 +53,7 @@ const UserProfileLayout = () => {
   const [user, setUser] = useState<IUser | null>(null);
   const getUserProfile = async () => {
     try {
-      const res = await api.get("/api/user/profile");
+      const res = await api.get(USER_API_ROUTES.PROFILE.GET);
       if (res.status === AppHttpStatusCodes.OK) setUser(res.data.data);
     } catch (error) {
       if (error instanceof AxiosError) {

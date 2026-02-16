@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { AppHttpStatusCodes } from "../../types/statusCode";
-import api from "../../services/apiService";
-import DeleteModal from "@/components/DeleteModal";
+import { AppHttpStatusCodes } from "@/types/statusCode";
+import api from "@/services/apiService";
+import DeleteModal from "@/components/ui/modal/DeleteModal";
+import { USER_API_ROUTES } from "@/routes/api/UserApiRoutes";
 
 interface IAddress {
   _id: string;
@@ -32,14 +33,14 @@ const Address = () => {
   };
 
   const getAllAddresses = async () => {
-    const res = await api.get("/api/user/address-book");
+    const res = await api.get(USER_API_ROUTES.ADDRESS_BOOK.GET);
     if (res.status === AppHttpStatusCodes.OK) {
       setAddresses(res.data.data);
     }
   };
 
   const onAddressDelete = async () => {
-    const res = await api.delete(`/api/user/address-book/${ItemId}`);
+    const res = await api.delete(USER_API_ROUTES.ADDRESS_BOOK.DELETE_ADDRESS_BOOK(ItemId));
     if (res.status === AppHttpStatusCodes.OK) {
       setAddresses((prevAddresses) => prevAddresses.filter(address => address._id !== ItemId));
       isModalClose(); // Close modal after deletion

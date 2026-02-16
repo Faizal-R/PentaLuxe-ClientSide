@@ -1,4 +1,5 @@
 import PasswordToggleButton from "@/components/PasswordToggleButton";
+import { USER_API_ROUTES } from "@/routes/api/UserApiRoutes";
 import api from "@/services/apiService";
 import { AppHttpStatusCodes } from "@/types/statusCode";
 import { AxiosError } from "axios";
@@ -14,7 +15,7 @@ const ChangePassword = () => {
   const navigate=useNavigate()
   const getUserProfile = async () => {
     try {
-      const res = await api.get("/api/user/profile");
+      const res = await api.get(USER_API_ROUTES.PROFILE.GET);
       if (res.status === AppHttpStatusCodes.OK) setUser(res.data.data);
     } catch (error) {
       if (error instanceof AxiosError) {
@@ -50,7 +51,7 @@ const ChangePassword = () => {
       confirmPasswordRef.current?.focus();
     } else {
       try {
-        const res = await api.patch("/api/user/change-password", {
+        const res = await api.patch(USER_API_ROUTES.PROFILE.CHANGE_PASSWORD, {
           currentPassword,
           newPassword,
         });

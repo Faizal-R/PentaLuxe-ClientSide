@@ -17,6 +17,7 @@ import { AxiosError } from "axios";
 import { AppHttpStatusCodes } from "@/types/statusCode";
 import api from "@/services/apiService";
 import { logOut } from "@/store/slices/userSlice";
+import { USER_API_ROUTES } from "@/routes/api/UserApiRoutes";
 
 
 
@@ -26,7 +27,7 @@ const user=useSelector((state:any)=>state.user.user)
   const dispatch = useDispatch();
   const getCartProducts = async () => {
     try {
-      const res = await api.get("/api/user/cart");
+      const res = await api.get(USER_API_ROUTES.CART.GET);
       if(res.status===AppHttpStatusCodes.UNAUTHORIZED){
      
         navigate('/login')

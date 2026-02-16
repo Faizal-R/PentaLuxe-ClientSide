@@ -5,6 +5,7 @@ import ProductCard from "@/components/ProductCard";
 import { IProduct } from "@/types/productTypes";
 import { AppHttpStatusCodes } from "@/types/statusCode";
 import Pagination from "@/components/Pagination";
+import { USER_API_ROUTES } from "@/routes/api/UserApiRoutes";
 
 const CategoryPage = () => {
   const [products, setProducts] = useState<IProduct[]>([]);
@@ -13,7 +14,7 @@ const CategoryPage = () => {
 
   const getAllProudctByCategory = async () => {
     try {
-      const res = await api.get(`/api/user/categories/${id}`);
+      const res = await api.get(USER_API_ROUTES.CATEGORIES.GET_ALL_PRODUCTS_BY_CATEGORY(id as string));
 
       if (res.status === AppHttpStatusCodes.OK) {
         const { data: products } = res.data;

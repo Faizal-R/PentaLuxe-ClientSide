@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 
-import api from "../../services/apiService";
-import { AppHttpStatusCodes } from "../../types/statusCode";
+import api from "@/services/apiService";
+import { AppHttpStatusCodes } from "@/types/statusCode";
 import { Wallet, DollarSign } from "lucide-react";
 import { HashLoader } from "react-spinners";
 import Pagination from "@/components/Pagination";
+import { USER_API_ROUTES } from "@/routes/api/UserApiRoutes";
 
 interface ITransactions {
   orderID: string;
@@ -23,22 +24,22 @@ const WalletPage = () => {
   // Fetch wallet balance and transactions
   const fetchWalletData = async () => {
     setLoading(true);
-    const res = await api.get("/api/user/wallet");
+    const res = await api.get(USER_API_ROUTES.WALLET.GET);
     if (res.status === AppHttpStatusCodes.OK) {
       const data = res.data.data;
       console.log(data);
       setTransactions(data.transactions);
       setBalance(data.balance);
     }
-    // Fetch data logic (not implemented here)
-    setLoading(false); // Make sure to set loading to false after fetching
+   
+    setLoading(false); 
   };
   const handlePagination = (items: ITransactions[]) => {
     setDisplayTransactions(items);
   };
   useEffect(() => {
     fetchWalletData();
-  }, []); // Call the function when the component mounts
+  }, []); 
 
   return (
     <div className="container mx-auto p-6 bg-gray-900 rounded-lg shadow-lg">

@@ -1,15 +1,16 @@
 import React, { ChangeEvent, useEffect, useRef, useState } from "react";
 import Modal from "react-modal";
-import api from "../../../services/apiService";
+import api from "@/services/apiService";
 import { AxiosError } from "axios";
-import { adminCategory } from "../../../utils/endpoints";
+import { adminCategory } from "@/utils/endpoints";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import DeleteModal from "../../../components/DeleteModal";
+import DeleteModal from "@/components/ui/modal/DeleteModal";
 import { FaPlus, FaEdit, FaTrash, FaUpload } from "react-icons/fa";
 import Pagination from "@/components/Pagination";
 import { AppHttpStatusCodes } from "@/types/statusCode";
 import { PropagateLoader } from "react-spinners";
+import { ADMIN_API_ROUTES } from "@/routes/api/AdminApiRoutes";
 
 export interface ICategories {
   _id: string;
@@ -18,16 +19,16 @@ export interface ICategories {
 }
 const AdminCategoryPage = () => {
   const [paginatedCategories, setPaginatedCategories] = useState<ICategories[]>(
-    []
+    [],
   );
-  const [loading,setLoading]=useState(false)
+  const [loading, setLoading] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const navigate = useNavigate();
   const [refresh, setRefresh] = useState(false);
   const [isModal, setIsModal] = useState(false);
   const isModalOpen = () => {
-    setIsEdit(false)
-    setIsModal(true)
+    setIsEdit(false);
+    setIsModal(true);
   };
 
   const isModelClose = () => {
@@ -35,7 +36,7 @@ const AdminCategoryPage = () => {
     setCategoryImage(null);
     setIsModal(false);
   };
-  const [selectedId,setSelectedId]=useState('')
+  const [selectedId, setSelectedId] = useState("");
   const [categoryName, setCategoryName] = useState("");
   const [categoryImage, setCategoryImage] = useState<File | null>(null);
   const [categories, setCategories] = useState<ICategories[]>([]);
@@ -43,8 +44,6 @@ const AdminCategoryPage = () => {
   const [itemId, setItemId] = useState("");
   const [selectedCategoryImage, setSelectedCategoryImage] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-
 
   const onCategoryAdd = async () => {
     if (!categoryImage || categoryName.trim() === "") {
@@ -56,29 +55,34 @@ const AdminCategoryPage = () => {
       const formData = new FormData();
       formData.append("categoryImage", categoryImage);
       formData.append("categoryName", categoryName);
-  setLoading(true)
-      const response = await api.post(adminCategory, formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
+      setLoading(true);
+      const response = await api.post(
+        ADMIN_API_ROUTES.CATEGORIES_MANAGEMENT.UPLOAD_CATEGORY,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
         },
-      });
+      );
       if (response.data.success) {
         setRefresh((prev) => !prev);
         toast.success("The category has been created and is now available.");
         setCategoryName("");
         setCategoryImage(null);
         setIsModal(false);
-        
       }
     } catch (error) {
       console.error("Error uploading category:", error);
       if (error instanceof AxiosError)
-        toast.error(error.response?.data.message || "Something Went Wrong");
-    } finally{
-      setLoading(false)
+        toast.error(
+          error.response?.data.message ||
+            "Something Went Wrong while adding Category",
+        );
+    } finally {
+      setLoading(false);
     }
   };
-
 
   const onCategoryEdit = async () => {
     if (categoryName.trim() === "") {
@@ -91,27 +95,38 @@ const AdminCategoryPage = () => {
     categoryImage
       ? formData.append("categoryImage", categoryImage)
       : formData.append("ExistingImage", selectedCategoryImage);
-   try{
-    setLoading(true)
-    const res = await api.put("/api/admin/categories", formData,{
-      headers: {
-        "Content-Type": "multipart/form-data",
-      }});
-    if (res.status === AppHttpStatusCodes.OK) {
-       const updatedCategory=res.data.data
-       console.log("updated Category",updatedCategory)
-       setCategories(categories.map(category=>category._id===updatedCategory._id?{...updatedCategory} : category))
-      toast.success(res.data.message)
-      setCategoryName("");
-        setCategoryImage(null)
-      setIsModal(false)
-      
+    try {
+      setLoading(true);
+      const res = await api.put(
+        ADMIN_API_ROUTES.CATEGORIES_MANAGEMENT.EDIT_CATEGORY,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        },
+      );
+      if (res.status === AppHttpStatusCodes.OK) {
+        const updatedCategory = res.data.data;
+        console.log("updated Category", updatedCategory);
+        setCategories(
+          categories.map((category) =>
+            category._id === updatedCategory._id
+              ? { ...updatedCategory }
+              : category,
+          ),
+        );
+        toast.success(res.data.message);
+        setCategoryName("");
+        setCategoryImage(null);
+        setIsModal(false);
+      }
+    } catch (error) {
+      if (error instanceof AxiosError)
+        toast.error(error.response?.data.message);
+    } finally {
+      setLoading(false);
     }
-   }catch(error){
-    if(error instanceof AxiosError) toast.error(error.response?.data.message)
-   } finally{
-    setLoading(false)
-  }
   };
   const onHandleFile = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event?.target.files) {
@@ -126,7 +141,7 @@ const AdminCategoryPage = () => {
   const closeModal = () => {
     setModalIsOpen(false);
   };
-  
+
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files![0];
     setCategoryImage(file);
@@ -134,9 +149,11 @@ const AdminCategoryPage = () => {
     setSelectedCategoryImage(imageUrl);
   };
 
-  const onDeleteCategory = async (_id: string) => {
+  const onDeleteCategory = async (categoryId: string) => {
     try {
-      const response = await api.delete(`/api/admin/categories/${_id}`);
+      const response = await api.delete(
+        ADMIN_API_ROUTES.CATEGORIES_MANAGEMENT.DELETE_CATEGORY(categoryId),
+      );
       if (response.data.success) {
         toast.success("Category deleted successfully");
         setRefresh((prev) => !prev);
@@ -144,17 +161,21 @@ const AdminCategoryPage = () => {
     } catch (error) {
       console.error("Error deleting category:", error);
       if (error instanceof AxiosError)
-        toast.error(error.response?.data.message || "Something Went Wrong");
+        toast.error(
+          error.response?.data.message ||
+            "Something Went Wrong While Deleting Category",
+        );
     }
-   
   };
 
   const getCategories = async () => {
     try {
-      const response = await api.get("/api/admin/categories");
+      const response = await api.get(
+        ADMIN_API_ROUTES.CATEGORIES_MANAGEMENT.GET,
+      );
       if (response.data.success) {
-        setCategories(response.data.categories);
-        setPaginatedCategories(response.data.categories); // Set paginated categories here
+        setCategories(response.data.data);
+        setPaginatedCategories(response.data.data); // Set paginated categories here
       }
     } catch (error) {
       if (error instanceof AxiosError) {
@@ -166,13 +187,13 @@ const AdminCategoryPage = () => {
   };
 
   const OpenEditCategoryModal = (id: string) => {
-    setSelectedId(id)
+    setSelectedId(id);
     setIsEdit(true);
     const category = categories.find((category) => id === category._id);
     if (category) {
       setCategoryName(category.categoryName);
       setSelectedCategoryImage(category.categoryImage);
-      
+
       setIsModal(true);
     }
   };
@@ -255,7 +276,6 @@ const AdminCategoryPage = () => {
                   className=" hidden"
                 />
                 <img
-               
                   className="w-32 h-36 object-cover rounded-md"
                   src={selectedCategoryImage}
                   alt=""
@@ -292,14 +312,14 @@ const AdminCategoryPage = () => {
             onClick={isEdit ? onCategoryEdit : onCategoryAdd}
             className="w-full bg-green-500 text-white py-3 rounded-lg font-semibold hover:bg-green-600 transition flex items-center justify-center gap-2"
           >
-            {loading?<PropagateLoader color="white" size={10}  className="py-3"/>:
-            <>
-            <FaUpload className="h-5 w-5" />
-           { isEdit ? "Edit Category" : "Add Category"}
-            </>
-              
-            
-            }
+            {loading ? (
+              <PropagateLoader color="white" size={10} className="py-3" />
+            ) : (
+              <>
+                <FaUpload className="h-5 w-5" />
+                {isEdit ? "Edit Category" : "Add Category"}
+              </>
+            )}
           </button>
         </div>
       </Modal>

@@ -24,7 +24,7 @@ const ResetPassword = () => {
       return;
     }
     try {
-        const res=await api.patch('/api/user/reset-password',{newPassword,email})
+        const res=await api.patch('/user/reset-password',{newPassword,email})
        
         if(res.status===AppHttpStatusCodes.OK){
             setMessage(res.data.message)

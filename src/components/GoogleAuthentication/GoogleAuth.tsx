@@ -7,6 +7,7 @@ import {  toast } from "sonner";
 import { AppHttpStatusCodes } from "@/types/statusCode";
 import { useDispatch } from "react-redux";
 import { LogIn } from "@/store/slices/userSlice";
+import { USER_API_ROUTES } from "@/routes/api/UserApiRoutes";
 
 type GoogleAuthProps = {
   text: string;
@@ -19,7 +20,7 @@ const GoogleAuth: React.FC<GoogleAuthProps> = ({ text }) => {
       if (data.user) {
         try {
         
-          const response = await api.post("/api/user/google-auth", {
+          const response = await api.post(USER_API_ROUTES.AUTH.GOOGLE_AUTH, {
             username: data.user.displayName,
             email: data.user.email,
           });

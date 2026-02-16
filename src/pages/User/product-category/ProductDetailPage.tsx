@@ -1,14 +1,15 @@
 import { useEffect, useState } from "react";
-import api from "../../services/apiService";
+import api from "@/services/apiService";
 import { toast } from "sonner";
 import { useNavigate, useParams } from "react-router-dom";
 import { AxiosError } from "axios";
-import { AppHttpStatusCodes } from "../../types/statusCode";
+import { AppHttpStatusCodes } from "@/types/statusCode";
 import { IProduct } from "@/types/productTypes";
 import { useDispatch } from "react-redux";
 import { addToCart } from "@/store/slices/cartSlice";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import ProductCard from "@/components/ProductCard";
+import { USER_API_ROUTES } from "@/routes/api/UserApiRoutes";
 const ProductDetailPage = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -24,7 +25,7 @@ const ProductDetailPage = () => {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   async function getProducts() {
     try {
-      const response = await api.get(`/api/user/products/${id}`);
+      const response = await api.get(USER_API_ROUTES.PRODUCTS.GET_BY_ID(id as string));
       if (response.data.success) {
         const { data: product } = response.data;
         fetchRelatedProducts(product.CategoryId.categoryName);
@@ -47,7 +48,7 @@ const ProductDetailPage = () => {
 
   const AddToCart = async () => {
     try {
-      const res = await api.post("/api/user/cart", {
+      const res = await api.post(USER_API_ROUTES.CART.ADD_TO_CART, {
         productId: product?._id,
         volume: selectedVolume,
         stock: stockQuantity,
@@ -69,7 +70,7 @@ const ProductDetailPage = () => {
   const addToWishlist = async () => {
     try {
       setWishlistToggle((prev) => !prev);
-      const res = await api.post("/api/user/wishlist", {
+      const res = await api.post(USER_API_ROUTES.WISHLIST.ADD_TO_WISHLIST, {
         productId: product?._id,
         variant: selectedVolume,
       });
@@ -84,9 +85,9 @@ const ProductDetailPage = () => {
     }
   };
 
-  const removeFromWishlist = async (id: string | null) => {
+  const removeFromWishlist = async (productId: string | null) => {
     try {
-      const res = await api.delete(`/api/user/wishlist/${id}`);
+      const res = await api.delete(USER_API_ROUTES.WISHLIST.REMOVE_FROM_WISHLIST(productId as string));
       if (res.status === AppHttpStatusCodes.OK) {
         toast.success(res.data.message);
         setWishlistToggle((prev) => !prev);
@@ -98,7 +99,7 @@ const ProductDetailPage = () => {
     }
   };
   const checkProductInWishlist = async () => {
-    const res = await api.get(`/api/user/wishlist/${id}`);
+    const res = await api.get(USER_API_ROUTES.WISHLIST.CHECK_PRODUCT(id as string));
     if (res.status === AppHttpStatusCodes.OK) {
       if (res.data.success) {
         setWishlistToggle(true);
@@ -122,7 +123,7 @@ const ProductDetailPage = () => {
 
   const fetchRelatedProducts = async (category: string) => {
     try {
-      const res = await api.post("/api/user/related-products", {
+      const res = await api.post(USER_API_ROUTES.PRODUCTS.GET_RELATED_PRODUCTS, {
         categoryName: category,
       });
       if (res.status === AppHttpStatusCodes.OK) {

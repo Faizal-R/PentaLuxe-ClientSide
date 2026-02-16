@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 import { IOrder } from "@/types/orderTypes";
-import CancellationModal from "@/components/CancellationAndReturnableModal";
+import CancellationModal from "@/components/ui/modal/CancellationAndReturnableModal";
 import {
   
   AlertTriangle,
@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import jsPDF from "jspdf";
 import Pagination from "@/components/Pagination";
+import { USER_API_ROUTES } from "@/routes/api/UserApiRoutes";
 
 const OrdersPage = () => {
   const [item, setItem] = useState("");
@@ -26,7 +27,7 @@ const OrdersPage = () => {
   const [modalType, setModalType] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("");
   const getUserOrders = async () => {
-    const res = await api.get("/api/user/orders");
+    const res = await api.get(USER_API_ROUTES.ORDERS.GET);
     if (res.status === AppHttpStatusCodes.OK) {
       setOrders(res.data.data);
     }
@@ -52,7 +53,7 @@ const OrdersPage = () => {
     payment: string
   ) => {
     try {
-      const res = await api.patch("/api/user/orders", {
+      const res = await api.patch(USER_API_ROUTES.ORDERS.CANCEL_OR_RETURN_ORDER, {
         id,
         reason,
         type: modalType,
@@ -212,10 +213,10 @@ const OrdersPage = () => {
 
     const {
       data: { data: key },
-    } = await api.get("/api/user/getkey");
+    } = await api.get("/user/getkey");
     const {
       data: { data: order },
-    } = await api.post("/api/user/create-razorpay-order", { totalPrice });
+    } = await api.post(USER_API_ROUTES.PAYMENT.CREATE_RAZORPAY_ORDER, { totalPrice });
 
     const options = {
       key,
@@ -225,7 +226,7 @@ const OrdersPage = () => {
       description: "Order Payment",
       order_id: order.id,
       handler: async function (response: any) {
-        await api.put("/api/user/order-retry-payment", {
+        await api.put(USER_API_ROUTES.PAYMENT.RETRY_PAYMENT, {
           razorpay_payment_id: response.razorpay_payment_id,
           razorpay_order_id: response.razorpay_order_id,
           razorpay_signature: response.razorpay_signature,

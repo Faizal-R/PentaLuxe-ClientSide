@@ -1,8 +1,8 @@
 import React, { lazy } from "react";
 import { Route, Routes } from "react-router-dom";
-import AdminLayout from "../layout/AdminLayout";
+import AdminLayout from "../../layout/AdminLayout";
 // import ProtectedRoute from "../components/ProtectedRoute";
-import ADMIN_ROUTES from "../constants/routes";
+import ADMIN_ROUTES from "../../constants/routes";
 import AdminProtectedRoute from "@/utils/AdminProtectedRoute";
 
 const AdminLoginPage = lazy(() => import("@/pages/Admin/auth/AdminLoginPage"));
@@ -13,7 +13,7 @@ const AdminProductsPage = lazy(
 const AdminAddProduct = lazy(() => import("@/pages/Admin/product-category/AdminAddProduct"));
 const AdminEditProduct = lazy(() => import("@/pages/Admin/product-category/AdminEditProduct"));
 const AdminCategoryPage = lazy(
-  () => import("../pages/Admin/product-category/AdminCategoryPage")
+  () => import("../../pages/Admin/product-category/AdminCategoryPage")
 );
 const AdminUserManagement = lazy(
   () => import("@/pages/Admin/managements/AdminUserManagement")

@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import api from "@/services/apiService";
 import { AppHttpStatusCodes } from "@/types/statusCode";
+import { ADMIN_API_ROUTES } from "@/routes/api/AdminApiRoutes";
 
 
 interface IOffers{
@@ -55,8 +56,8 @@ const AdminOfferPage: React.FC = () => {
       
       const endpoint =
         offerType === "product"
-          ? "/api/admin/product-offer"
-          : "/api/admin/category-offer";
+          ? ADMIN_API_ROUTES.OFFERS_MANAGEMENT.UPDATE_PRODUCT_OFFER
+          :ADMIN_API_ROUTES.OFFERS_MANAGEMENT.UPDATE_CATEGORY_OFFER;
       const response = await api.patch(endpoint, offerData);
       if (response.status === AppHttpStatusCodes.OK) {
         toast.success(response.data.message);
@@ -75,9 +76,9 @@ const AdminOfferPage: React.FC = () => {
 
   const getAllProducts = async () => {
     try {
-      const res = await api.get("/api/admin/products");
+      const res = await api.get(ADMIN_API_ROUTES.PRODUCTS_MANAGEMENT.GET_ALL);
       if (res.data.success) {
-        setOfferItems(res.data.products);
+        setOfferItems(res.data.data);
       }
     } catch (error) {
       if (error instanceof AxiosError) {
@@ -91,9 +92,9 @@ const AdminOfferPage: React.FC = () => {
 
   const getCategories = async () => {
     try {
-      const response = await api.get("/api/admin/categories");
+      const response = await api.get(ADMIN_API_ROUTES.CATEGORIES_MANAGEMENT.GET);
       if (response.data.success) {
-        setOfferItems(response.data.categories);
+        setOfferItems(response.data.data);
       }
     } catch (error) {
       if (error instanceof AxiosError) {
@@ -106,7 +107,7 @@ const AdminOfferPage: React.FC = () => {
 
   const listOffers=async()=>{
   try {
-    const res=await api.get('/api/admin/offers')
+    const res=await api.get(ADMIN_API_ROUTES.OFFERS_MANAGEMENT.GET_ALL)
       if(res.status===AppHttpStatusCodes.OK){
         setOffers(res.data.data)
       }

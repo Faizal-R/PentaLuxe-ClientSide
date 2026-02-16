@@ -15,7 +15,8 @@ import {
 } from "@/store/slices/cartSlice";
 import { Link, useNavigate } from "react-router-dom";
 import { Cart } from "@/types/cartProductTypes";
-import { ICoupon } from "../Admin/AdminCouponManagementPage";
+import { ICoupon } from "@/pages/Admin/managements/AdminCouponManagementPage";
+import { USER_API_ROUTES } from "@/routes/api/UserApiRoutes";
 
 const CartPage = () => {
   const navigate = useNavigate();
@@ -34,10 +35,14 @@ const CartPage = () => {
   const handleChangeQuantity = async (
     itemId: string,
     action: string,
-    stock: number
+    stock: number,
   ) => {
     try {
-      const res = await api.patch("/api/user/cart", { itemId, action, stock });
+      const res = await api.patch(USER_API_ROUTES.CART.PATCH, {
+        itemId,
+        action,
+        stock,
+      });
 
       if (res.status === AppHttpStatusCodes.OK) {
         dispatch(changeQuantity({ id: itemId, action, stock }));
@@ -48,11 +53,13 @@ const CartPage = () => {
     }
   };
 
-  const handleProductRemove = async (id: string) => {
+  const handleProductRemove = async (productId: string) => {
     try {
-      const res = await api.delete(`/api/user/cart/${id}`);
+      const res = await api.delete(
+        USER_API_ROUTES.CART.REMOVE_PRODUCT(productId),
+      );
       if (res.status === AppHttpStatusCodes.OK) {
-        dispatch(removeProduct(id));
+        dispatch(removeProduct(productId));
       }
     } catch (error) {
       if (error instanceof AxiosError) {
@@ -63,7 +70,9 @@ const CartPage = () => {
 
   const OnProceedToCheckOut = async () => {
     try {
-      const res = await api.patch("/api/user/cart-total", { totalPrice });
+      const res = await api.patch(USER_API_ROUTES.CART.CART_TOTAL, {
+        totalPrice,
+      });
       if (res.status === AppHttpStatusCodes.OK) {
         navigate("/checkout", {
           state: { totalPrice, discountAmount, selectedCoupon },
@@ -74,7 +83,7 @@ const CartPage = () => {
 
   const getCartProducts = async () => {
     try {
-      const res = await api.get("/api/user/cart");
+      const res = await api.get(USER_API_ROUTES.CART.GET);
 
       if (res.status === AppHttpStatusCodes.OK) {
         if (res.data.data) {
@@ -94,15 +103,15 @@ const CartPage = () => {
   };
   const getAllCoupons = async () => {
     try {
-      const res = await api.get("/api/user/coupons");
+      const res = await api.get(USER_API_ROUTES.COUPONS.GET);
       if (res.status === AppHttpStatusCodes.OK) {
         const { data: coupons } = res.data;
-        const filteredCoupons=coupons.filter((coupon:any)=>coupon.expiryDate!==null)
+        const filteredCoupons = coupons.filter(
+          (coupon: any) => coupon.expiryDate !== null,
+        );
         setCoupons(filteredCoupons);
       }
-    } catch (error) {
-
-    }
+    } catch (error) {}
   };
 
   const toggleCouponDiscount = () => {
@@ -146,7 +155,7 @@ const CartPage = () => {
     let finalPrice = deliveryCharge + calculatedTotal;
     if (discountRate > 0) {
       const selectedCoupon = availableCoupons.find(
-        (coupon) => coupon.discountPercentage === selectedRate
+        (coupon) => coupon.discountPercentage === selectedRate,
       );
       if (selectedCoupon) {
         const calculatedDiscount = (calculatedTotal * discountRate) / 100;
@@ -154,9 +163,9 @@ const CartPage = () => {
 
         const finalDiscount = Math.min(
           calculatedDiscount,
-          Number(maxDiscountPrice)
+          Number(maxDiscountPrice),
         );
-          
+
         setDiscountAmount(finalDiscount);
         finalPrice -= finalDiscount;
       }
@@ -166,24 +175,22 @@ const CartPage = () => {
     setTotalPrice(finalPrice);
   }, [products, discountRate]);
 
-
   useEffect(() => {
     const filteredCoupons = coupons.filter(
-      (coupon) => OriginalPrice >= Number(coupon.minimumPurchasePrice)
+      (coupon) => OriginalPrice >= Number(coupon.minimumPurchasePrice),
     );
 
     setAvailableCoupons(filteredCoupons);
-  
   }, [OriginalPrice, coupons]);
-  useEffect(()=>{
-   if(availableCoupons.length===0){
-    setSelectedCoupon('')
-  setDiscountRate(0)
-    setSelectedRate(0)
-    setDiscountAmount(0)
-    setToggleButton(false)
-   }
-  },[availableCoupons])
+  useEffect(() => {
+    if (availableCoupons.length === 0) {
+      setSelectedCoupon("");
+      setDiscountRate(0);
+      setSelectedRate(0);
+      setDiscountAmount(0);
+      setToggleButton(false);
+    }
+  }, [availableCoupons]);
 
   return (
     <div className="w-full ">
@@ -259,7 +266,7 @@ const CartPage = () => {
                             handleChangeQuantity(
                               product._id,
                               "DEC",
-                              product.variant.stock
+                              product.variant.stock,
                             )
                           }
                           className={`bg-slate-600 px-3 rounded-lg font-bold text-xl ${
@@ -276,7 +283,7 @@ const CartPage = () => {
                             handleChangeQuantity(
                               product._id,
                               "INC",
-                              product.variant.stock
+                              product.variant.stock,
                             )
                           }
                           className="bg-slate-600 px-3 rounded-lg font-bold text-xl"
@@ -309,7 +316,7 @@ const CartPage = () => {
                       onChange={(e) =>
                         handleOnCouponChange(
                           Number(e.target.value),
-                          e.target.options[e.target.selectedIndex].text
+                          e.target.options[e.target.selectedIndex].text,
                         )
                       }
                       className="w-full px-4 font-bold h-full rounded focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -358,14 +365,16 @@ const CartPage = () => {
                   <span className="font-bold font-mono">₹40</span>
                 </h1>
 
-                {discountRate !== 0 &&availableCoupons.length>0 ?(
+                {discountRate !== 0 && availableCoupons.length > 0 ? (
                   <h1 className="mt-5 flex justify-between">
                     <span className="font-bold font-mono">Coupon</span>
                     <span className="font-extrabold font-mono text-green-800">
                       - {discountAmount.toFixed(2)}
                     </span>
                   </h1>
-                ):<></>}
+                ) : (
+                  <></>
+                )}
                 <div className="w-full bg-gray-500 mt-5 h-[1px]"></div>
                 <h1 className="mt-5 flex justify-between text-xl">
                   <span className="font-bold font-mono ">Total</span>

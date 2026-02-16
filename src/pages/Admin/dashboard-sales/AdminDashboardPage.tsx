@@ -1,3 +1,4 @@
+import { ADMIN_API_ROUTES } from "@/routes/api/AdminApiRoutes";
 import api from "@/services/apiService";
 import { AppHttpStatusCodes } from "@/types/statusCode";
 import  { ChangeEvent, useEffect, useState } from "react";
@@ -66,7 +67,7 @@ const AdminDashboard = () => {
     setFilter(event.target.value);
   };
   const getAdminDashboard = async () => {
-    const res = await api.get(`/api/admin/dashboard?filter=${filter}`);
+    const res = await api.get(ADMIN_API_ROUTES.DASHBOARD.GET(filter));
     if (res.status === AppHttpStatusCodes.OK) {
       const data = res.data.data;
       console.log("sales data",data)
@@ -77,14 +78,14 @@ const AdminDashboard = () => {
     }
   };
   const getBestSellingProducts = async () => {
-    const res = await api.get("/api/admin/best-selling-products");
+    const res = await api.get(ADMIN_API_ROUTES.DASHBOARD.BEST_SELLING_PRODUCTS);
     if (res.status === AppHttpStatusCodes.OK) {
       console.log(res.data.data);
       setProducts(res.data.data);
     }
   };
   const getBestSellingCategory = async () => {
-    const res = await api.get("/api/admin/best-selling-categories");
+    const res = await api.get(ADMIN_API_ROUTES.DASHBOARD.BEST_SELLING_CATEGORIES);
     if (res.status === AppHttpStatusCodes.OK) {
       setCategories(res.data.data)
      

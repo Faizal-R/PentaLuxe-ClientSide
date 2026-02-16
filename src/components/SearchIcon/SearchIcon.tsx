@@ -5,6 +5,7 @@ import { useState } from "react";
 import styles from "./SearchIcon.module.css";
 import api from "@/services/apiService";
 import { useDispatch } from "react-redux";
+import { USER_API_ROUTES } from "@/routes/api/UserApiRoutes";
 
 const SearchIcon = () => {
   const [SearchInput, setSearchInput] = useState("");
@@ -14,11 +15,11 @@ const SearchIcon = () => {
   const onSearchHandler = async () => {
     if (SearchInput.length > 0) {
       dispatch(clearSearchedProducts());
-      const res = await api.post("/api/user/search-products-by-category", {
+      const res = await api.post(USER_API_ROUTES.PRODUCTS.SEARCH_BY_CATEGORY, {
         text: SearchInput,
       });
       if (res.status === 200) {
-        dispatch(setSearchedProducts(res.data.searchedProducts));
+        dispatch(setSearchedProducts(res.data.data));
         setSearchInput("");
         navigate("/products");
       }

@@ -17,6 +17,8 @@
     "@react-oauth/google": "^0.12.1",
     "@reduxjs/toolkit": "^2.2.7",
     "axios": "^1.7.3",
+    "baseline-browser-mapping": "^2.9.19",
+    "caniuse-lite": "^1.0.30001769",
     "chart.js": "^4.4.6",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",

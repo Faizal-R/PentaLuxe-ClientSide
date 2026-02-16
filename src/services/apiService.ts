@@ -3,8 +3,8 @@ import { AppHttpStatusCodes } from "../types/statusCode";
 import { toast } from "sonner";
 import store from "@/store/store";
 import { logOut } from "@/store/slices/userSlice";
-// const baseURL = "https://pentaluxe-serverside.onrender.com"
-const baseURL = "http://localhost:7000";
+
+const baseURL=import.meta.env.VITE_SERVER_API_ENDPOINT || 'http://localhost:7000/api'
 
 const dispatch=store.dispatch
 const api = axios.create({
@@ -24,7 +24,7 @@ api.interceptors.request.use(
     if(adminToken){
       config.headers['x-admin-authorization']=`Bearer ${adminToken}`
     }
-    console.log(config);
+    console.log("ApiRq:",config," URL:",config.url);
     return config;
   },
   (error) => {
@@ -34,6 +34,7 @@ api.interceptors.request.use(
 
 api.interceptors.response.use(
   (response) => {
+    console.log("Responses")
     return response;
   },
   (error) => {

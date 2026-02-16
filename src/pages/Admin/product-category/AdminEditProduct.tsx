@@ -3,10 +3,10 @@ import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { AxiosError } from "axios";
 import { PulseLoader } from "react-spinners";
-import api from "../../services/apiService";
-import ImageCropper from "../../components/ImageCropper/ImageCropper";
-import { convertBlobUrlsToFiles } from "../../utils/fileUpload";
-import Button from "../../components/Button/Button";
+import api from "@/services/apiService";
+import ImageCropper from "@/components/ImageCropper/ImageCropper";
+import { convertBlobUrlsToFiles } from "@/utils/fileUpload";
+import Button from "@/components/Button/Button";
 
 interface Category {
   _id: string;
@@ -17,6 +17,7 @@ interface Category {
 
 import { IProduct } from "@/types/productTypes";
 import { Trash2 } from "lucide-react";
+import { ADMIN_API_ROUTES } from "@/routes/api/AdminApiRoutes";
 interface IQuantities {
   volume: string;
   price: string | number;
@@ -59,10 +60,10 @@ const AdminEditProduct = () => {
   const getProductDetails = async (): Promise<void> => {
     try {
       if (id) {
-        const response = await api.get(`/api/admin/products/${id}`);
+        const response = await api.get(ADMIN_API_ROUTES.PRODUCTS_MANAGEMENT.GET_BY_ID(id));
 
         if (response.data.success) {
-          const product: IProduct = response.data.product;
+          const product: IProduct = response.data.data;
 
           // Set basic product details
           setProductName(product.Name);
@@ -86,9 +87,9 @@ const AdminEditProduct = () => {
 
   const getCategories = async (): Promise<void> => {
     try {
-      const res = await api.get("/api/admin/categories");
+      const res = await api.get(ADMIN_API_ROUTES.CATEGORIES_MANAGEMENT.GET);
       if (res.data.success) {
-        setCategories(res.data.categories);
+        setCategories(res.data.data);
       }
     } catch (error) {
       console.error("Error fetching categories:", error);
@@ -212,7 +213,7 @@ const AdminEditProduct = () => {
       formData.append("DiscountPercentage", String(discountPercentage));
       formData.append("Quantities", JSON.stringify(quantities));
 
-      const response = await api.put(`/api/admin/products/${id}`, formData, {
+      const response = await api.put(ADMIN_API_ROUTES.PRODUCTS_MANAGEMENT.UPDATE_PRODUCT(id as string), formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 

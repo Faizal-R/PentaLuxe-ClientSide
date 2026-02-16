@@ -1,6 +1,6 @@
 import React, { lazy } from "react";
 import { Route, Routes } from "react-router-dom";
-import { ROUTES } from "../constants/routes";
+import { ROUTES } from "../../constants/routes";
 import UserProtectedRoutes from "@/utils/UserProtectedRoutes";
 import ForgotPasswordEmail from "@/pages/User/auth/ForgotPasswordEmail";
 import ForgotOtpPage from "@/pages/User/auth/ForgotOtpPage";
@@ -14,8 +14,8 @@ import ResetPassword from "@/pages/User/auth/ResetPassword";
 
 const HomePage = lazy(() => import("@/pages/User/base/HomePage"));
 const MainLayout = lazy(() => import("@/layout/MainLayout"));
-const MinimalLayout = lazy(() => import("@/layout/MinimalLayout"));
-const AboutPage = lazy(() => import("../pages/User/base/AboutPage"));
+
+const AboutPage = lazy(() => import("../../pages/User/base/AboutPage"));
 const AllProductsPage = lazy(() => import("@/pages/User/product-category/AllProductsPage"));
 const ProductDetailPage = lazy(() => import("@/pages/User/product-category/ProductDetailPage"));
 const CategoryPage = lazy(() => import("@/pages/User/product-category/CategoryPage"));
@@ -26,7 +26,7 @@ const UserProfileLayout = lazy(() => import("@/layout/UserProfileLayout"));
 const Profile = lazy(() => import("@/pages/User/profile/Profile"));
 const Address = lazy(() => import("@/pages/User/profile/Address"));
 const AddAndEditAddress = lazy(() => import("@/pages/User/profile/AddAndEditAddress"));
-const CheckOutPage = lazy(() => import("../pages/User/cart-checkout/CheckOutPage"));
+const CheckOutPage = lazy(() => import("../../pages/User/cart-checkout/CheckOutPage"));
 const OrderPage = lazy(() => import("@/pages/User/order/OrdersPage"));
 const OrderSuccessPage = lazy(() => import("@/pages/User/order/OrderSuccessPage"));
 const CartPage = lazy(() => import("@/pages/User/cart-checkout/CartPage"));
@@ -69,7 +69,7 @@ const UserRoutes: React.FC = () => (
       <Route path="order/success" element={<OrderSuccessPage/>}/>
     </Route>
 
-    <Route element={<MinimalLayout />}>
+
       <Route path={ROUTES.LOGIN} element={<LoginPage />} />
       <Route path={ROUTES.REGISTER} element={<SignupPage />} />
       <Route path={`${ROUTES.OTP_VERIFY}/:id`} element={<OtpVerifyPage />} />
@@ -78,7 +78,7 @@ const UserRoutes: React.FC = () => (
         <Route path="otp" element={<ForgotOtpPage/>}/>
       </Route>
       <Route path="/reset-password" element={<ResetPassword/>}/>
-    </Route>
+  
   </Routes>
 );
 

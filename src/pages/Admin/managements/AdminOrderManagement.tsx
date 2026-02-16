@@ -7,6 +7,7 @@ import React, { useEffect, useState } from "react";
 
 import { IOrder } from "@/types/orderTypes";
 import { toast } from "sonner";
+import { ADMIN_API_ROUTES } from "@/routes/api/AdminApiRoutes";
 const AdminOrderManagement: React.FC = () => {
   const [orders, setOrders] = useState<IOrder[] | []>([]);
   const [paginatedOrders, setPaginatedOrders] = useState<IOrder[] | []>([]);
@@ -15,10 +16,10 @@ const AdminOrderManagement: React.FC = () => {
 
   const handleStatusChange = async (status: string, orderId: string) => {
     try {
-      const res = await api.patch("/api/admin/orders", { status, orderId });
+      const res = await api.patch(ADMIN_API_ROUTES.ORDERS_MANAGEMENT.HANDLE_ORDER_STATUS, { status, orderId });
       const updatedOrders = orders.map((order) =>
         order._id === orderId
-          ? { ...order, status: res.data.order.status }
+          ? { ...order, status: res.data.data.status }
           : order
       );
       setOrders(updatedOrders);
@@ -67,11 +68,11 @@ const AdminOrderManagement: React.FC = () => {
 
   const getAllOrders = async () => {
     try {
-      const res = await api.get("/api/admin/orders");
+      const res = await api.get(ADMIN_API_ROUTES.ORDERS_MANAGEMENT.GET_ALL);
 
       if (res.status === AppHttpStatusCodes.OK) {
-        setOrders(res.data.orders);
-        setPaginatedOrders(res.data.orders);
+        setOrders(res.data.data);
+        setPaginatedOrders(res.data.data);
       }
     } catch (err) {}
   };

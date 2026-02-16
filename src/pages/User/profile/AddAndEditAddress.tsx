@@ -1,10 +1,11 @@
 import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import Input from "../../components/Input/Input";
-import api from "../../services/apiService";
-import { AppHttpStatusCodes } from "../../types/statusCode";
+import Input from "@/components/Input/Input";
+import api from "@/services/apiService";
+import { AppHttpStatusCodes } from "@/types/statusCode";
 import { toast } from "sonner";
 import { addressValidation } from "@/utils/AddressValidation";
+import { USER_API_ROUTES } from "@/routes/api/UserApiRoutes";
 
 
 interface InputField {
@@ -57,12 +58,12 @@ const AddAndEditAddress = () => {
       let res;
 
       if (action === "Add") {
-        res = await api.post("/api/user/address-book", {
+        res = await api.post(USER_API_ROUTES.ADDRESS_BOOK.ADD_ADDRESS_BOOK, {
           formState,
           addressType,
         });
       } else {
-        res = await api.put("/api/user/address-book", {
+        res = await api.put(USER_API_ROUTES.ADDRESS_BOOK.UPDATE_ADDRESS_BOOK, {
           formState,
           addressType,
           addressId:id
@@ -90,7 +91,7 @@ const AddAndEditAddress = () => {
     if (id) {
       const fetchAddress = async () => {
         try {
-          const response = await api.get(`/api/user/address-book/${id}`);
+          const response = await api.get(USER_API_ROUTES.ADDRESS_BOOK.GET_BY_ID(id));
           console.log("addresssss",response)
           setFormState(response.data.data);
           setAddressType(response.data.data.addressType)

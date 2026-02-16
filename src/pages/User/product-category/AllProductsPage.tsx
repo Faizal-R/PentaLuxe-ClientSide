@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import api from "../../services/apiService";
-import ProductCard from "../../components/ProductCard";
+import api from "@/services/apiService";
+import ProductCard from "@/components/ProductCard";
 import { IProduct } from "@/types/productTypes";
 import Pagination from "@/components/Pagination";
 import { AlertTriangle } from "lucide-react";
 import { AxiosError } from "axios";
 import { toast } from "sonner";
+import { USER_API_ROUTES } from "@/routes/api/UserApiRoutes";
 
 const AllProductsPage = () => {
 const [searchedProducts,setSearchedProducts]=useState<IProduct[]>([])
@@ -24,7 +25,7 @@ const [searchedProducts,setSearchedProducts]=useState<IProduct[]>([])
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await api.get("/api/user/products");
+        const response = await api.get(USER_API_ROUTES.PRODUCTS.GET);
         const { data: products } = response.data;
         setProducts(products);
   
@@ -116,12 +117,12 @@ const [searchedProducts,setSearchedProducts]=useState<IProduct[]>([])
    
     try {
       if (input.trim().length > 0) {
-        const res = await api.post("/api/user/search-products-by-category", {
+        const res = await api.post(USER_API_ROUTES.PRODUCTS.SEARCH_BY_CATEGORY, {
           text: input,
         });
         if (res.status === 200) {
           console.log(res.data)
-          setSearchedProducts(res.data.searchedProducts)
+          setSearchedProducts(res.data.data)
           setInput("");
       
         }

@@ -1,12 +1,12 @@
 import { ChangeEvent, useEffect, useState } from "react";
-import api from "../../services/apiService";
-import { adminGetAllUsers } from "../../utils/endpoints";
+import api from "@/services/apiService";
 import { AxiosError } from "axios";
 import { useNavigate } from "react-router-dom";
 import { AppHttpStatusCodes } from "@/types/statusCode";
 import { toast } from "sonner";
 import { IAddress } from "@/types/AddressTypes";
 import Pagination from "@/components/Pagination";
+import { ADMIN_API_ROUTES } from "@/routes/api/AdminApiRoutes";
 
 interface IUser {
   _id: string;
@@ -30,14 +30,14 @@ const AdminUserManagement = () => {
 
   const getAllUsers = async () => {
     try {
-      const response = await api(adminGetAllUsers);
+      const response = await api(ADMIN_API_ROUTES.USERS_MANAGEMENT.GET);
       if (response.data.success) {
-        setUsers(response.data.users);
-        setDisplayedUsers(response.data.users.slice(0, 5)); // Default to the first page
+        setUsers(response.data.data);
+        setDisplayedUsers(response.data.data.slice(0, 5)); // Default to the first page
       }
     } catch (error) {
       if (error instanceof AxiosError) {
-        if (error.response?.status === 403) {
+        if (error.response?.status === AppHttpStatusCodes.FORBIDDEN) {
           navigate('/admin');
         }
       }
@@ -55,7 +55,7 @@ const AdminUserManagement = () => {
     setSearchedUsers((prevUsers) => updatedUsers(prevUsers)); // Update searchedUsers as well
   
     try {
-      await api.patch("/api/admin/statusUpdate", {
+      await api.patch(ADMIN_API_ROUTES.USERS_MANAGEMENT.UPDATE_STATUS, {
         id,
         status: users.find((user) => user._id === id)?.status,
       });
@@ -112,7 +112,7 @@ const AdminUserManagement = () => {
     }
 
     try {
-      const res = await api.post('/api/admin/search-user', { text: input });
+      const res = await api.post(ADMIN_API_ROUTES.USERS_MANAGEMENT.SEARCH_USER, { text: input });
       if (res.status === AppHttpStatusCodes.OK) {
         setSearchedUsers(res.data.users);
         setDisplayedUsers(res.data.users.slice(0, 5)); // Default to the first page

@@ -7,6 +7,7 @@ import { addToCart } from "@/store/slices/cartSlice";
 import { useDispatch } from "react-redux";
 import { AppHttpStatusCodes } from "@/types/statusCode";
 import { AxiosError } from "axios";
+import { USER_API_ROUTES } from "@/routes/api/UserApiRoutes";
 interface IProductCardProps {
   product: IProduct;
 }
@@ -16,7 +17,7 @@ const ProductCard: React.FC<IProductCardProps> = ({ product }) => {
   const navigate=useNavigate()
   const AddToCart = async () => {
     try {
-      const res = await api.post("/api/user/cart", {
+      const res = await api.post(USER_API_ROUTES.CART.ADD_TO_CART, {
         productId: product?._id,
         volume: product.Variants[0].volume,
         stock: product.Variants?.[0].stock,

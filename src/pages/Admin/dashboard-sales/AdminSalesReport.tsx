@@ -8,6 +8,7 @@ import autoTable from "jspdf-autotable";
 import Pagination from "@/components/Pagination";
 import { PulseLoader } from "react-spinners";
 import { toast } from "sonner";
+import { ADMIN_API_ROUTES } from "@/routes/api/AdminApiRoutes";
 
 const AdminSalesReport = () => {
   const [loading, setLoading] = useState(false);
@@ -31,7 +32,9 @@ const AdminSalesReport = () => {
   const getAllSalesReport = async () => {
     try {
       setLoading(true);
-      const res = await api.post("/api/admin/sales-report", { dateRange });
+      const res = await api.post(ADMIN_API_ROUTES.SALES_REPORT.GET_ALL, {
+        dateRange,
+      });
       if (res.status === AppHttpStatusCodes.OK) {
         setSalesReportData(res.data.data);
       }
@@ -149,19 +152,18 @@ const AdminSalesReport = () => {
   const generateSalesReport = async () => {
     const currentDate = new Date();
     if (dateRange === "custom") {
-      if(!customDates.startDate || !customDates.endDate){
-         toast.error('Date Fields are required')
-         return
+      if (!customDates.startDate || !customDates.endDate) {
+        toast.error("Date Fields are required");
+        return;
       }
       if (
         new Date(customDates.startDate) > currentDate ||
         new Date(customDates.endDate) > currentDate
-
       ) {
         toast.error("Start date or end date cannot be in the future.");
         return;
       }
-      if(  new Date(customDates.startDate) >new Date(customDates.endDate)){
+      if (new Date(customDates.startDate) > new Date(customDates.endDate)) {
         toast.error("End date should be greater than the start date");
         return;
       }
@@ -174,7 +176,10 @@ const AdminSalesReport = () => {
       endDate: customDates.endDate,
     };
     try {
-      const response = await api.post("/api/admin/sales-report", payload);
+      const response = await api.post(
+        ADMIN_API_ROUTES.SALES_REPORT.GENERATE,
+        payload,
+      );
       if (response.status === AppHttpStatusCodes.OK) {
         setSalesReportData(response.data.data);
       }

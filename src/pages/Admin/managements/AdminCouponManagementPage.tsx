@@ -1,4 +1,4 @@
-import CouponModal from "@/components/CouponModal";
+import CouponModal from "@/components/ui/modal/CouponModal";
 import Pagination from "@/components/Pagination";
 
 import api from "@/services/apiService";
@@ -9,6 +9,7 @@ import { AxiosError } from "axios";
 
 import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { ADMIN_API_ROUTES } from "@/routes/api/AdminApiRoutes";
 
 export interface ICoupon {
   _id?: string;
@@ -24,31 +25,37 @@ const CouponManagement: React.FC = () => {
   const [coupons, setCoupons] = useState<ICoupon[]>([]);
   const [displayCoupons, setDispalyCoupons] = useState<ICoupon[]>([]);
 
-
   // Function to remove a coupon
-  const removeCoupon = async (id: string) => {
+  const removeCoupon = async (couponId: string) => {
     try {
-      const res = await api.delete(`/api/admin/coupon/${id}`);
+      const res = await api.delete(
+        ADMIN_API_ROUTES.COUPONS_MANAGEMENT.REMOVE(couponId),
+      );
       if (res.status === AppHttpStatusCodes.OK) {
         toast.success(res.data.message);
         setCoupons(
-          coupons.filter((coupon) => coupon._id && coupon._id.toString() !== id)
+          coupons.filter(
+            (coupon) => coupon._id && coupon._id.toString() !== couponId,
+          ),
         );
       }
     } catch (error) {
       if (error instanceof AxiosError) {
-        toast.error(error.response?.data.message || "Hell kjalksdjklfjlsj");
+        toast.error(
+          error.response?.data.message || "Error Occured While Removing Coupon",
+        );
       }
     }
   };
-
 
   const CreateCouponEntry = async (couponData: ICoupon) => {
     try {
       const {
         data: { data: coupon },
-      } = await api.post("/api/admin/coupon", { couponData });
-      setModalStatus(false)
+      } = await api.post(ADMIN_API_ROUTES.COUPONS_MANAGEMENT.CREATE, {
+        couponData,
+      });
+      setModalStatus(false);
       if (coupon) {
         setCoupons((prev) => [...prev, coupon]);
       }
@@ -60,7 +67,7 @@ const CouponManagement: React.FC = () => {
   };
 
   const getAllCoupons = async () => {
-    const res = await api.get("/api/admin/coupon");
+    const res = await api.get(ADMIN_API_ROUTES.COUPONS_MANAGEMENT.GET);
     if (res.status === AppHttpStatusCodes.OK) {
       setCoupons(res.data.data);
       console.log(res.data.data);
@@ -106,60 +113,65 @@ const CouponManagement: React.FC = () => {
           </thead>
           <tbody>
             {coupons.length > 0 ? (
-              (displayCoupons.length>0?displayCoupons:coupons).map((coupon, index) => (
-                <tr
-                  key={coupon._id}
-                  className={`border-b ${
-                    index % 2 === 0 ? "bg-gray-100" : "bg-white"
-                  } transition duration-300 ease-in-out hover:bg-gray-200`}
-                >
-                  <td className="px-6 py-4 text-gray-800 font-medium">
-                    {coupon.couponName}
-                  </td>
-                  <td className="px-6 py-4 text-teal-600">
-                    {coupon.discountPercentage}%
-                  </td>
-                  <td className="px-6 py-4 text-green-600">
-                  ₹{coupon.maxDiscountPrice}
-                  </td>
-                  <td className="px-6 py-4 text-gray-600">
-                  ₹{coupon.minimumPurchasePrice}
-                  </td>
-                  <td className="px-6 py-4 text-gray-600">
-                    {coupon.expiryDate ? (
-                      new Date(coupon.expiryDate).toLocaleDateString("en-US", {
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                      })
-                    ) : (
-                      <span className="text-red-500">Coupon Exipired</span>
-                    )}
-                  </td>
-                  <td className="px-6 py-4">
-                    <button
-                      className="flex items-center bg-gradient-to-r from-red-500 to-pink-500 text-white py-2 px-4 rounded-full shadow-lg hover:shadow-2xl transition duration-200 transform hover:scale-105"
-                      onClick={() => removeCoupon(coupon._id ?? "")}
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5 mr-2"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
+              (displayCoupons.length > 0 ? displayCoupons : coupons).map(
+                (coupon, index) => (
+                  <tr
+                    key={coupon._id}
+                    className={`border-b ${
+                      index % 2 === 0 ? "bg-gray-100" : "bg-white"
+                    } transition duration-300 ease-in-out hover:bg-gray-200`}
+                  >
+                    <td className="px-6 py-4 text-gray-800 font-medium">
+                      {coupon.couponName}
+                    </td>
+                    <td className="px-6 py-4 text-teal-600">
+                      {coupon.discountPercentage}%
+                    </td>
+                    <td className="px-6 py-4 text-green-600">
+                      ₹{coupon.maxDiscountPrice}
+                    </td>
+                    <td className="px-6 py-4 text-gray-600">
+                      ₹{coupon.minimumPurchasePrice}
+                    </td>
+                    <td className="px-6 py-4 text-gray-600">
+                      {coupon.expiryDate ? (
+                        new Date(coupon.expiryDate).toLocaleDateString(
+                          "en-US",
+                          {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                          },
+                        )
+                      ) : (
+                        <span className="text-red-500">Coupon Exipired</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4">
+                      <button
+                        className="flex items-center bg-gradient-to-r from-red-500 to-pink-500 text-white py-2 px-4 rounded-full shadow-lg hover:shadow-2xl transition duration-200 transform hover:scale-105"
+                        onClick={() => removeCoupon(coupon._id ?? "")}
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1H9a1 1 0 00-1 1v3m7 0H8"
-                        />
-                      </svg>
-                      Remove
-                    </button>
-                  </td>
-                </tr>
-              ))
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-5 w-5 mr-2"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1H9a1 1 0 00-1 1v3m7 0H8"
+                          />
+                        </svg>
+                        Remove
+                      </button>
+                    </td>
+                  </tr>
+                ),
+              )
             ) : (
               <tr>
                 <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
@@ -169,7 +181,11 @@ const CouponManagement: React.FC = () => {
             )}
           </tbody>
         </table>
-        <Pagination items={coupons} itemsPerPage={5} onPageChange={handlePagination}/>
+        <Pagination
+          items={coupons}
+          itemsPerPage={5}
+          onPageChange={handlePagination}
+        />
       </div>
     </div>
   );

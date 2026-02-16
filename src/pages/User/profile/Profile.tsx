@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import api from "../../services/apiService";
-import { AppHttpStatusCodes } from "../../types/statusCode";
+import api from "@/services/apiService";
+import { AppHttpStatusCodes } from "@/types/statusCode";
 import { toast } from "sonner";
 import { AxiosError } from "axios";
 import { useNavigate } from "react-router-dom";
+import { USER_API_ROUTES } from "@/routes/api/UserApiRoutes";
 
 interface IUser {
   username: string;
@@ -17,7 +18,7 @@ const Profile = () => {
 
   const getUserProfile = async () => {
     try {
-      const res = await api.get("/api/user/profile");
+      const res = await api.get(USER_API_ROUTES.PROFILE.GET);
       if (res.status === AppHttpStatusCodes.OK) setUser(res.data.data);
     } catch (error) {
       if (error instanceof AxiosError) {
@@ -53,7 +54,7 @@ const Profile = () => {
       return;
     }
     try {
-      const res = await api.put("/api/user/profile", { user });
+      const res = await api.put(USER_API_ROUTES.PROFILE.UPDATE, { user });
       if (res.status === AppHttpStatusCodes.OK) {
         toast.success(res.data.message);
       }
