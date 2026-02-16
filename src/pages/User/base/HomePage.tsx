@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import ProductCard from "@/components/ProductCard";
 import api from "@/services/apiService";
 import { AxiosError } from "axios";
-import { userProductListing } from "@/utils/endpoints";
+
 import { toast } from "sonner";
 
 import { AppHttpStatusCodes } from "@/types/statusCode";

@@ -2,7 +2,7 @@ import React, { ChangeEvent, useEffect, useRef, useState } from "react";
 import Modal from "react-modal";
 import api from "@/services/apiService";
 import { AxiosError } from "axios";
-import { adminCategory } from "@/utils/endpoints";
+
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import DeleteModal from "@/components/ui/modal/DeleteModal";
