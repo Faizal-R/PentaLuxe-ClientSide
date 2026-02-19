@@ -101,7 +101,7 @@ const AdminEditProduct = () => {
       setQuantities(prev => [...prev, { volume: newSize, price: "", stock: "" }]);
       setNewSize("");
     } else {
-      toast.error("Configuration already exists.");
+      errorToast("Configuration already exists.");
     }
   };
 
@@ -116,7 +116,7 @@ const AdminEditProduct = () => {
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (existingImages.length + newProductImages.length >= 5) {
-      toast.error("Maximum 5 visualizations permitted.");
+      errorToast("Maximum 5 visualizations permitted.");
       return;
     }
     if (e.target.files && e.target.files.length > 0) {

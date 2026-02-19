@@ -6,7 +6,7 @@ interface ProductModalProps {
   product: IProduct | null;
   onClose: () => void;
   selectedVolume: string;
-  hanldeCart: (productId: string, volume: string) => void;
+  hanldeCart: (productId: string, volume: string,stock:number) => void;
 }
 
 const ProductModal: React.FC<ProductModalProps> = ({ product, onClose, selectedVolume, hanldeCart }) => {
@@ -27,7 +27,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose, selectedV
   }, [product, selectedSize]);
 
   const handleSendCartData = () => {
-    if (product) hanldeCart(product._id, selectedSize);
+    if (product) hanldeCart(product._id, selectedSize,selectProductStock);
   };
 
   if (!product) return null;

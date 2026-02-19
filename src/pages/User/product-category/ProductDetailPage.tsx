@@ -142,7 +142,7 @@ const ProductDetailPage = () => {
                 <div className="relative w-[75%] h-[75%] flex items-center justify-center">
                    <div className="absolute inset-0 bg-emerald-500/5 blur-[80px] rounded-full" />
                    <TransformWrapper>
-                      <TransformComponent wrapperClassName="!w-full !h-full" contentClassName="!w-full !h-full flex items-center justify-center">
+                      <TransformComponent wrapperClass="!w-full !h-full" contentClass="!w-full !h-full flex items-center justify-center">
                          <img 
                            src={product.Images[selectedImageIndex]} 
                            alt={product.Name} 

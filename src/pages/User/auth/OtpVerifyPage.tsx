@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { ShieldCheck, Sparkles, RefreshCcw, ArrowLeft, Mail, CheckCircle2 } from "lucide-react";
 import { LogIn } from "@/store/slices/userSlice";
 import { AuthService } from "@/services/user/AuthService";
-import { toast } from "sonner";
+import { errorToast } from "@/utils/customToast";
 
 const OtpVerifyPage = () => {
   const dispatch = useDispatch();
@@ -41,7 +41,7 @@ const OtpVerifyPage = () => {
   const otpVerification = async () => {
     const otpCode = otp.join("");
     if (otpCode.length < 4) {
-      toast.error("Please enter the full 4-digit code");
+      errorToast("Please enter the full 4-digit code");
       return;
     }
 

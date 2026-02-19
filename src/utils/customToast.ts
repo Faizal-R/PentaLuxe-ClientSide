@@ -1,6 +1,8 @@
 
-
 import { toast } from 'sonner';
+
+export { toast };
+
 export const successToast = (message: string) => {
   toast.success(message, {
     duration: 3000,
@@ -25,4 +27,8 @@ export const infoToast = (message: string) => {
       fontSize: "14px",
     },
   });
+};
+
+export const dismissToast = (id?: string | number) => {
+  toast.dismiss(id);
 };

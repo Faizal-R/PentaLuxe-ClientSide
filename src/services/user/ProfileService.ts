@@ -15,7 +15,7 @@ export const ProfileService = {
     }
   },
 
-  updateProfile: async (profileData: Record<string, unknown>) => {
+  updateProfile: async (profileData: any) => {
     try {
       const res = await api.put(USER_API_ROUTES.PROFILE.UPDATE, profileData);
       successToast(res.data.message || "Profile updated successfully");
@@ -38,7 +38,7 @@ export const ProfileService = {
     }
   },
 
-  addAddress: async (addressData: Record<string, unknown>) => {
+  addAddress: async (addressData: any) => {
     try {
       const res = await api.post(USER_API_ROUTES.ADDRESS_BOOK.ADD_ADDRESS_BOOK, addressData);
       successToast(res.data.message || "Address added successfully");
@@ -50,7 +50,7 @@ export const ProfileService = {
     }
   },
 
-  updateAddress: async (addressData: Record<string, unknown>) => {
+  updateAddress: async (addressData: any) => {
     try {
       const res = await api.put(USER_API_ROUTES.ADDRESS_BOOK.UPDATE_ADDRESS_BOOK, addressData);
       successToast(res.data.message || "Address updated successfully");

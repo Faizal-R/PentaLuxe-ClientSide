@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
-import { toast } from "sonner";
+import { successToast } from "@/utils/customToast";
 import { useDispatch } from "react-redux";
 import { logOut } from "@/store/slices/userSlice";
 import { pentaluxeTheme } from "@/theme";
@@ -79,7 +79,7 @@ const UserProfileLayout = () => {
     if (link.action === 'logout') {
       dispatch(logOut());
       localStorage.removeItem('accessToken');
-      toast.success("Logged out successfully");
+      successToast("Logged out successfully");
       navigate('/');
     }
   };

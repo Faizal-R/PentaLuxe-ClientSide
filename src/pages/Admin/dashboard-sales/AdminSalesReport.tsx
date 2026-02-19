@@ -5,7 +5,7 @@ import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import Pagination from "@/components/Pagination";
 import { PulseLoader } from "react-spinners";
-import { toast } from "sonner";
+import { errorToast } from "@/utils/customToast";
 import { AdminStatsService } from "@/services/admin/AdminStatsService";
 
 const AdminSalesReport = () => {
@@ -144,18 +144,18 @@ const AdminSalesReport = () => {
     const currentDate = new Date();
     if (dateRange === "custom") {
       if (!customDates.startDate || !customDates.endDate) {
-        toast.error("Date Fields are required");
+        errorToast("Date Fields are required");
         return;
       }
       if (
         new Date(customDates.startDate) > currentDate ||
         new Date(customDates.endDate) > currentDate
       ) {
-        toast.error("Start date or end date cannot be in the future.");
+        errorToast("Start date or end date cannot be in the future.");
         return;
       }
       if (new Date(customDates.startDate) > new Date(customDates.endDate)) {
-        toast.error("End date should be greater than the start date");
+        errorToast("End date should be greater than the start date");
         return;
       }
     }

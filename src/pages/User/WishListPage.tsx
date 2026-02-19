@@ -49,11 +49,11 @@ const WishlistPage = () => {
     setModalOpen(true);
   };
 
-  const handleAddToCart = async (productId: string, volume: string) => {
+  const handleAddToCart = async (productId: string, volume: string,stock:number) => {
     const res = await CartService.addToCart({
       productId,
-      quantity: 1, // Default to 1
-      size: volume, // Using volume as size if compatible
+     volume, // Using volume as size if compatible
+     stock,
     });
 
     if (res.success) {

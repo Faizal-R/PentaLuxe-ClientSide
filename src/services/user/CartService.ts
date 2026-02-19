@@ -16,6 +16,7 @@ export const CartService = {
   },
 
   addToCart: async (cartData: { productId?: string; volume?: string | null; stock?: number }) => {
+    console.log("cartData", cartData)
     try {
       const res = await api.post(USER_API_ROUTES.CART.ADD_TO_CART, cartData);
       successToast(res.data.message || "Added to cart");

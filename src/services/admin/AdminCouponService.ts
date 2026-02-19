@@ -15,7 +15,7 @@ export const AdminCouponService = {
     }
   },
 
-  createCoupon: async (couponData: Record<string, unknown>) => {
+  createCoupon: async (couponData: any) => {
     try {
       const res = await api.post(ADMIN_API_ROUTES.COUPONS_MANAGEMENT.CREATE, { couponData });
       successToast(res.data.message || "Coupon created successfully");

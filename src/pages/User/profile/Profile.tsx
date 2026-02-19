@@ -4,7 +4,7 @@ import { errorToast } from "@/utils/customToast";
 import { pentaluxeTheme } from "@/theme";
 import { User, Mail, Phone, ShieldCheck, Sparkles, Save } from "lucide-react";
 
-interface IUser {
+export interface IUser {
   username: string;
   email: string;
   phone: number | string;

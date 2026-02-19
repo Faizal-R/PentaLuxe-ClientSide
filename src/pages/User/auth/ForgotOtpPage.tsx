@@ -2,7 +2,7 @@ import { useState, useEffect, ChangeEvent, KeyboardEvent, ClipboardEvent, useRef
 import { useLocation, useNavigate } from "react-router-dom";
 import { ShieldCheck, Sparkles, RefreshCcw, ArrowLeft, Mail, CheckCircle2 } from "lucide-react";
 import { AuthService } from "@/services/user/AuthService";
-import { toast } from "sonner";
+import { errorToast } from "@/utils/customToast";
 
 const ForgotOtpPage = () => {
   const [otp, setOtp] = useState<string[]>(["", "", "", ""]);
@@ -73,7 +73,7 @@ const ForgotOtpPage = () => {
   const verifyOtp = async () => {
     const joinedOtp = otp.join("");
     if (joinedOtp.length < 4) {
-      toast.error("Please enter the full 4-digit code");
+      errorToast("Please enter the full 4-digit code");
       return;
     }
 

@@ -13,8 +13,7 @@ import {
   Clock
 } from "lucide-react";
 import { AdminOrderService } from "@/services/admin/AdminOrderService";
-import { successToast } from "@/utils/customToast";
-import { toast } from "sonner";
+import { toast, dismissToast, successToast } from "@/utils/customToast";
 
 const AdminOrderManagement: React.FC = () => {
   const [orders, setOrders] = useState<IOrder[] | []>([]);
@@ -53,14 +52,14 @@ const AdminOrderManagement: React.FC = () => {
               className="flex-grow px-6 py-3.5 bg-emerald-500 text-black text-[10px] font-bold uppercase tracking-widest rounded-xl hover:bg-white transition-all shadow-[0_10px_20px_rgba(16,185,129,0.2)]"
               onClick={() => {
                 handleStatusChange(status, orderId); 
-                toast.dismiss(id);
+                dismissToast(id);
               }}
             >
               Verify
             </button>
             <button
               className="px-6 py-3.5 bg-white/5 text-white text-[10px] font-bold uppercase tracking-widest rounded-xl hover:bg-white/10 transition-all border border-white/5"
-              onClick={() => toast.dismiss(id)}
+              onClick={() => dismissToast(id)}
             >
               Cancel
             </button>

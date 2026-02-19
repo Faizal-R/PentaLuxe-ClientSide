@@ -1,6 +1,6 @@
 
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { toast } from "sonner";
+import { successToast } from "@/utils/customToast";
 import { 
   LayoutDashboard, 
   Package, 
@@ -19,7 +19,7 @@ const AdminSideBar = () => {
   
   const onAdminLoggOutHandler = async () => {
     localStorage.removeItem("adminToken");
-    toast.success("Admin Logged Out Successfully");
+    successToast("Admin Logged Out Successfully");
     setTimeout(() => {
       navigate('/admin');
     }, 2000);

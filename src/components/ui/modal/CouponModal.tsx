@@ -1,7 +1,7 @@
 import { ICoupon } from "@/pages/Admin/managements/AdminCouponManagementPage";
 import React, { useState } from "react";
 import ReactModal from "react-modal";
-import { toast } from "sonner";
+import { errorToast } from "@/utils/customToast";
 interface ICouponModalProps {
   isModalOpen: boolean; // To indicate if the modal is open
   setIsModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
@@ -29,11 +29,11 @@ const CouponModal = ({
 
   const handleSendCouponAndCloseModal = () => {
     if (!couponName) {
-      toast.error("Coupon name is required.");
+      errorToast("Coupon name is required.");
       return;
     }
     if (!expiryDate) {
-      toast.error("Expiry date is required.");
+      errorToast("Expiry date is required.");
       return;
     }
 
@@ -41,7 +41,7 @@ const CouponModal = ({
     const currentDate = new Date();
     const selectedExpiryDate = new Date(expiryDate);
     if (selectedExpiryDate <= currentDate) {
-      toast.error("Expiry date should be greater than the current date.");
+      errorToast("Expiry date should be greater than the current date.");
       return;
     }
     if (
@@ -49,16 +49,16 @@ const CouponModal = ({
       Number(discountPercentage) <= 0 ||
       Number(discountPercentage) >= 100
     ) {
-      toast.error("Discount percentage should be between 0 and 100.");
+      errorToast("Discount percentage should be between 0 and 100.");
       return;
     }
 
     if (!maxDiscountPrice || Number(maxDiscountPrice) <= 0) {
-      toast.error("Max discount price must be a positive value.");
+      errorToast("Max discount price must be a positive value.");
       return;
     }
     if (!minimumPurchasePrice || Number(minimumPurchasePrice) <= 0) {
-      toast.error("Minimum purchase price must be a positive value.");
+      errorToast("Minimum purchase price must be a positive value.");
       return;
     }
     const DataToSend = {

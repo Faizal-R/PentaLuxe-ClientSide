@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { toast } from "sonner";
+import { errorToast } from "@/utils/customToast";
 import { User, Mail, Lock, Phone, Sparkles, UserPlus, ArrowRight, RefreshCcw, ShieldCheck } from "lucide-react";
 
 import GoogleAuth from "@/components/GoogleAuthentication/GoogleAuth";
@@ -26,15 +26,15 @@ const SignupPage = () => {
     event.preventDefault();
 
     if (!username.trim() || !email.trim() || !password.trim() || !phone) {
-      toast.error("Please fill in all required fields to proceed");
+      errorToast("Please fill in all required fields to proceed");
       return;
     }
     if (password !== confirmPassword) {
-      toast.error("Passwords do not match");
+      errorToast("Passwords do not match");
       return;
     }
     if (phone.length !== 10) {
-      toast.error("Phone number must be 10 digits");
+      errorToast("Phone number must be 10 digits");
       return;
     }
 

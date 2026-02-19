@@ -23,18 +23,15 @@ const AdminProductsPage = () => {
   const [displayedProducts, setDisplayedProducts] = useState<IProduct[]>([]);
   const [searchedProducts, setSearchedProducts] = useState<IProduct[]>([]);
   const [input, setInput] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
 
   const itemsPerPage = 8; 
 
   const getProducts = async () => {
-    setIsLoading(true);
     const res = await AdminProductService.getAllProducts();
     if (res.success) {
       setProducts(res.data);
       setDisplayedProducts(res.data.slice(0, itemsPerPage));
     }
-    setIsLoading(false);
   };
 
   const openModal = (id: string) => {

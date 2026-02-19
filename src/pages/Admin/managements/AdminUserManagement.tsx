@@ -1,5 +1,5 @@
 import React, { ChangeEvent, useEffect, useState } from "react";
-import { toast } from "sonner";
+import { toast, dismissToast } from "@/utils/customToast";
 import { IAddress } from "@/types/AddressTypes";
 import Pagination from "@/components/Pagination";
 import { 
@@ -84,14 +84,14 @@ const AdminUserManagement = () => {
               className="flex-grow px-6 py-3.5 bg-emerald-500 text-black text-[10px] font-bold uppercase tracking-widest rounded-xl hover:bg-white transition-all shadow-[0_10px_20px_rgba(16,185,129,0.2)]"
               onClick={() => {
                 toggleBlock(userId); 
-                toast.dismiss(id);
+                dismissToast(id);
               }}
             >
               Confirm
             </button>
             <button
               className="px-6 py-3.5 bg-white/5 text-white text-[10px] font-bold uppercase tracking-widest rounded-xl hover:bg-white/10 transition-all border border-white/5"
-              onClick={() => toast.dismiss(id)}
+              onClick={() => dismissToast(id)}
             >
               Abort
             </button>

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { toast } from "sonner";
+import { errorToast } from "@/utils/customToast";
 import { ShieldCheck, Mail, Lock, Sparkles, LogIn as LoginIcon, ArrowRight, RefreshCcw } from "lucide-react";
 
 import GoogleAuth from "@/components/GoogleAuthentication/GoogleAuth";
@@ -22,7 +22,7 @@ const LoginPage = () => {
 
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
-      toast.error("Email and password are required");
+      errorToast("Email and password are required");
       return;
     }
 

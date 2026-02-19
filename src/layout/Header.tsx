@@ -12,7 +12,7 @@ import {
   X
 } from "lucide-react";
 import { setCartProducts } from "@/store/slices/cartSlice";
-import { toast } from "sonner";
+import { successToast } from "@/utils/customToast";
 import { logOut } from "@/store/slices/userSlice";
 import { pentaluxeTheme } from "@/theme";
 import { CartService } from "@/services/user/CartService";
@@ -37,7 +37,7 @@ const Header = () => {
     localStorage.clear();
     dispatch(logOut());
     dispatch(setCartProducts([]));
-    toast.success("Logged out successfully");
+    successToast("Logged out successfully");
     navigate('/');
   };
 

@@ -1,6 +1,6 @@
 import axios from "axios";
 import { AppHttpStatusCodes } from "../types/statusCode";
-import { toast } from "sonner";
+import { errorToast } from "@/utils/customToast";
 import store from "@/store/store";
 import { logOut } from "@/store/slices/userSlice";
 
@@ -43,7 +43,7 @@ api.interceptors.response.use(
 
       if (status === AppHttpStatusCodes.UNAUTHORIZED) {
         console.log("Unauthorized Access:", data);
-        toast.error(data.message)
+        errorToast(data.message)
         dispatch(logOut())
         setTimeout(() => {
           if (window.location.pathname !== "/login") {
@@ -54,7 +54,7 @@ api.interceptors.response.use(
       
       } else if (status === AppHttpStatusCodes.FORBIDDEN) {
         console.log("Forbidden Access:", data);
-        toast.error(data.message)
+        errorToast(data.message)
         setTimeout(()=>{
           if (window.location.pathname !== "/admin"){
 
