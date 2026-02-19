@@ -1,11 +1,9 @@
-
-import { clearSearchedProducts, setSearchedProducts } from "@/store/slices/searchSlice";
-import { useNavigate } from "react-router-dom";
-import { useState } from "react";
-import styles from "./SearchIcon.module.css";
-import api from "@/services/apiService";
+import { useCallback, useState } from "react";
 import { useDispatch } from "react-redux";
-import { USER_API_ROUTES } from "@/routes/api/UserApiRoutes";
+import { useNavigate } from "react-router-dom";
+import { clearSearchedProducts, setSearchedProducts } from "@/store/slices/searchSlice";
+import { ProductService } from "@/services/user/ProductService";
+import styles from "./SearchIcon.module.css";
 
 const SearchIcon = () => {
   const [SearchInput, setSearchInput] = useState("");
@@ -15,11 +13,9 @@ const SearchIcon = () => {
   const onSearchHandler = async () => {
     if (SearchInput.length > 0) {
       dispatch(clearSearchedProducts());
-      const res = await api.post(USER_API_ROUTES.PRODUCTS.SEARCH_BY_CATEGORY, {
-        text: SearchInput,
-      });
-      if (res.status === 200) {
-        dispatch(setSearchedProducts(res.data.data));
+      const res = await ProductService.searchByCategory({ text: SearchInput });
+      if (res.success) {
+        dispatch(setSearchedProducts(res.data));
         setSearchInput("");
         navigate("/products");
       }

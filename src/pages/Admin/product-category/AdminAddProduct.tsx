@@ -1,10 +1,7 @@
 import React, { useEffect, useState } from "react";
-import api from "@/services/apiService";
 import ImageCropper from "@/components/ImageCropper/ImageCropper";
 import { convertBlobUrlsToFiles } from "@/utils/fileUpload";
 import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
-import { AxiosError } from "axios";
 import { PulseLoader } from "react-spinners";
 import { 
   Plus, 
@@ -18,7 +15,9 @@ import {
   Maximize2,
   Users
 } from "lucide-react";
-import { ADMIN_API_ROUTES } from "@/routes/api/AdminApiRoutes";
+import { AdminProductService } from "@/services/admin/AdminProductService";
+import { AdminCategoryService } from "@/services/admin/AdminCategoryService";
+import { errorToast } from "@/utils/customToast";
 
 type SizeInfo = {
   price: string;
@@ -94,54 +93,40 @@ const AdminAddProduct = () => {
 
   const sendProductsToServer = async () => {
     if (!productName.trim() || !description.trim() || !selectedGender || !selectedCategory || !selectedScentType) {
-      toast.error("Protocol error: All mandatory fields must be populated.");
+      errorToast("Protocol error: All mandatory fields must be populated.");
       return;
     }
 
-    try {
-      const files = await convertBlobUrlsToFiles(croppedImages);
-      if (files.length === 0) {
-        toast.error("Visual evidence required: Upload at least one specimen image.");
-        return;
-      }
-
-      const formData = new FormData();
-      files.forEach(file => formData.append("files", file));
-      formData.append("Name", productName);
-      formData.append("Description", description);
-      formData.append("Gender", selectedGender);
-      formData.append("categoryName", selectedCategory);
-      formData.append("ScentType", selectedScentType);
-      formData.append("DiscountPercentage", String(discountPercentage));
-      Object.entries(quantities).forEach(([key, value]) => {
-        formData.append(`productVolumes[${key}][price]`, value.price);
-        formData.append(`productVolumes[${key}][stock]`, value.stock);
-      });
-
-      setLoading(true);
-      const res = await api.post(ADMIN_API_ROUTES.PRODUCTS_MANAGEMENT.CREATE_PRODUCT, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-
-      if (res.data.success) {
-        toast.success("Specimen integrated successfully.");
-        navigate("/admin/products");
-      }
-    } catch (error) {
-      if (error instanceof AxiosError) toast.error(error.response?.data.message);
-    } finally {
-      setLoading(false);
+    const files = await convertBlobUrlsToFiles(croppedImages);
+    if (files.length === 0) {
+      errorToast("Visual evidence required: Upload at least one specimen image.");
+      return;
     }
+
+    const formData = new FormData();
+    files.forEach(file => formData.append("files", file));
+    formData.append("Name", productName);
+    formData.append("Description", description);
+    formData.append("Gender", selectedGender);
+    formData.append("categoryName", selectedCategory);
+    formData.append("ScentType", selectedScentType);
+    formData.append("DiscountPercentage", String(discountPercentage));
+    Object.entries(quantities).forEach(([key, value]) => {
+      formData.append(`productVolumes[${key}][price]`, value.price);
+      formData.append(`productVolumes[${key}][stock]`, value.stock);
+    });
+
+    setLoading(true);
+    const res = await AdminProductService.addProduct(formData);
+    if (res.success) {
+      navigate("/admin/products");
+    }
+    setLoading(false);
   };
 
   const getCategories = React.useCallback(async () => {
-    try {
-      const res = await api.get(ADMIN_API_ROUTES.CATEGORIES_MANAGEMENT.GET);
-      if (res.data.success) setCategories(res.data.data);
-    } catch (err) { 
-      console.error(err);
-      toast.error("Category sync failed."); 
-    }
+    const res = await AdminCategoryService.getAllCategories();
+    if (res.success) setCategories(res.data);
   }, []);
 
   useEffect(() => {

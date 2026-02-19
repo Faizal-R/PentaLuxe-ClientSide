@@ -1,10 +1,6 @@
 import { useEffect, useState } from "react";
-import api from "@/services/apiService";
-import { AppHttpStatusCodes } from "@/types/statusCode";
-import { toast } from "sonner";
-import { AxiosError } from "axios";
-import { useNavigate } from "react-router-dom";
-import { USER_API_ROUTES } from "@/routes/api/UserApiRoutes";
+import { ProfileService } from "@/services/user/ProfileService";
+import { errorToast } from "@/utils/customToast";
 import { pentaluxeTheme } from "@/theme";
 import { User, Mail, Phone, ShieldCheck, Sparkles, Save } from "lucide-react";
 
@@ -15,18 +11,13 @@ interface IUser {
 }
 
 const Profile = () => {
-  const navigate = useNavigate();
   const [user, setUser] = useState<IUser | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
 
   const getUserProfile = async () => {
-    try {
-      const res = await api.get(USER_API_ROUTES.PROFILE.GET);
-      if (res.status === AppHttpStatusCodes.OK) setUser(res.data.data);
-    } catch (error) {
-      if (error instanceof AxiosError) {
-        if (error.response?.status === AppHttpStatusCodes.UNAUTHORIZED) navigate("/login");
-      }
+    const res = await ProfileService.getProfile();
+    if (res.success) {
+      setUser(res.data);
     }
   };
 
@@ -41,22 +32,16 @@ const Profile = () => {
 
   const updateInformation = async () => {
     if (!user?.username.trim() || !user?.email.trim() || !user?.phone) {
-      toast.error("Please fill in all required profile fields");
+      errorToast("Please fill in all required profile fields");
       return;
     }
     
     setIsUpdating(true);
-    try {
-      const res = await api.put(USER_API_ROUTES.PROFILE.UPDATE, { user });
-      if (res.status === AppHttpStatusCodes.OK) {
-        toast.success("Identity updated successfully");
-      }
-    } catch (error) {
-      toast.error("Internal synchronization error");
-      console.log(error)
-    } finally {
-      setIsUpdating(false);
+    const res = await ProfileService.updateProfile(user);
+    if (res.success) {
+      // Success toast is handled by the service
     }
+    setIsUpdating(false);
   };
 
   useEffect(() => {
@@ -167,3 +152,4 @@ const Profile = () => {
 };
 
 export default Profile;
+

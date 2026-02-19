@@ -1,10 +1,6 @@
-
-import{ ChangeEvent, useEffect, useRef, useState, useCallback } from "react";
+import { ChangeEvent, useEffect, useRef, useState, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { toast } from "sonner";
-import { AxiosError } from "axios";
 import { PulseLoader } from "react-spinners";
-import api from "@/services/apiService";
 import ImageCropper from "@/components/ImageCropper/ImageCropper";
 import { convertBlobUrlsToFiles } from "@/utils/fileUpload";
 import { 
@@ -24,8 +20,10 @@ import {
   X,
   Percent
 } from "lucide-react";
-import { ADMIN_API_ROUTES } from "@/routes/api/AdminApiRoutes";
 import { IProduct } from "@/types/productTypes";
+import { AdminProductService } from "@/services/admin/AdminProductService";
+import { AdminCategoryService } from "@/services/admin/AdminCategoryService";
+import { errorToast } from "@/utils/customToast";
 
 interface Category {
   _id: string;
@@ -62,33 +60,24 @@ const AdminEditProduct = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const getCategories = useCallback(async (): Promise<void> => {
-    try {
-      const res = await api.get(ADMIN_API_ROUTES.CATEGORIES_MANAGEMENT.GET);
-      if (res.data.success) setCategories(res.data.data);
-    } catch (error) {
-      console.error(error);
-      toast.error("Taxonomy sync failed.");
-    }
+    const res = await AdminCategoryService.getAllCategories();
+    if (res.success) setCategories(res.data);
   }, []);
 
   const getProductDetails = useCallback(async (): Promise<void> => {
-    try {
-      if (id) {
-        const response = await api.get(ADMIN_API_ROUTES.PRODUCTS_MANAGEMENT.GET_BY_ID(id));
-        if (response.data.success) {
-          const product: IProduct = response.data.data;
-          setProductName(product.Name);
-          setDescription(product.Description);
-          setSelectedGender(product.Gender);
-          setSelectedCategory(product.CategoryId.categoryName);
-          setSelectedScentType(product.ScentType);
-          setDiscountPercentage(product.DiscountPercentage);
-          setExistingImages(product.Images);
-          setQuantities(product.Variants);
-        }
+    if (id) {
+      const res = await AdminProductService.getProductById(id);
+      if (res.success) {
+        const product: IProduct = res.data;
+        setProductName(product.Name);
+        setDescription(product.Description);
+        setSelectedGender(product.Gender);
+        setSelectedCategory(product.CategoryId.categoryName);
+        setSelectedScentType(product.ScentType);
+        setDiscountPercentage(product.DiscountPercentage);
+        setExistingImages(product.Images);
+        setQuantities(product.Variants);
       }
-    } catch (error) {
-      if (error instanceof AxiosError) toast.error(error.response?.data.message);
     }
   }, [id]);
 
@@ -139,11 +128,11 @@ const AdminEditProduct = () => {
   };
 
   const validateForm = (): boolean => {
-    if (!productName.trim()) { toast.error("Nomenclature is required."); return false; }
-    if (!description.trim()) { toast.error("Olfactory narrative is required."); return false; }
-    if (!selectedGender) { toast.error("Demographic target is required."); return false; }
-    if (!selectedCategory) { toast.error("Taxonomy classification is required."); return false; }
-    if (!selectedScentType) { toast.error("Elemental profile is required."); return false; }
+    if (!productName.trim()) { errorToast("Nomenclature is required."); return false; }
+    if (!description.trim()) { errorToast("Olfactory narrative is required."); return false; }
+    if (!selectedGender) { errorToast("Demographic target is required."); return false; }
+    if (!selectedCategory) { errorToast("Taxonomy classification is required."); return false; }
+    if (!selectedScentType) { errorToast("Elemental profile is required."); return false; }
     return true;
   };
 
@@ -154,37 +143,30 @@ const AdminEditProduct = () => {
   const updateProduct = async (): Promise<void> => {
     if (!validateForm()) return;
 
-    try {
-      setLoading(true);
-      const formData = new FormData();
+    if (!id) return;
 
-      if (newProductImages.length > 0) {
-        const files = await convertBlobUrlsToFiles(newProductImages);
-        if (files) formData.append('file', files[0]);
-      }
-     
-      formData.append("existingImages", JSON.stringify(existingImages));
-      formData.append("Name", productName);
-      formData.append("Description", description);
-      formData.append("Gender", selectedGender!);
-      formData.append("categoryName", selectedCategory);
-      formData.append("ScentType", selectedScentType);
-      formData.append("DiscountPercentage", String(discountPercentage));
-      formData.append("Quantities", JSON.stringify(quantities));
+    const formData = new FormData();
 
-      const response = await api.put(ADMIN_API_ROUTES.PRODUCTS_MANAGEMENT.UPDATE_PRODUCT(id as string), formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-
-      if (response.data.success) {
-        toast.success("Specimen integrity updated.");
-        navigate("/admin/products");
-      }
-    } catch (error) {
-      if (error instanceof AxiosError) toast.error(error.response?.data.message);
-    } finally {
-      setLoading(false);
+    if (newProductImages.length > 0) {
+      const files = await convertBlobUrlsToFiles(newProductImages);
+      if (files) formData.append('file', files[0]);
     }
+    
+    formData.append("existingImages", JSON.stringify(existingImages));
+    formData.append("Name", productName);
+    formData.append("Description", description);
+    formData.append("Gender", selectedGender!);
+    formData.append("categoryName", selectedCategory);
+    formData.append("ScentType", selectedScentType);
+    formData.append("DiscountPercentage", String(discountPercentage));
+    formData.append("Quantities", JSON.stringify(quantities));
+
+    setLoading(true);
+    const res = await AdminProductService.updateProduct(id, formData);
+    if (res.success) {
+      navigate("/admin/products");
+    }
+    setLoading(false);
   };
 
   return (

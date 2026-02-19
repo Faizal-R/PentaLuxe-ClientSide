@@ -1,7 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
-import { AxiosError } from "axios";
 import jsPDF from "jspdf";
 import { 
   ShoppingBag, 
@@ -14,13 +12,12 @@ import {
   Clock
 } from "lucide-react";
 
-import api from "@/services/apiService";
-import { AppHttpStatusCodes } from "@/types/statusCode";
 import { IOrder } from "@/types/orderTypes";
 import CancellationModal from "@/components/ui/modal/CancellationAndReturnableModal";
 import Pagination from "@/components/Pagination";
-import { USER_API_ROUTES } from "@/routes/api/UserApiRoutes";
 import { pentaluxeTheme } from "@/theme";
+import { OrderService } from "@/services/user/OrderService";
+import { CheckoutService } from "@/services/user/CheckoutService";
 
 const OrdersPage = () => {
   const navigate = useNavigate();
@@ -34,16 +31,11 @@ const OrdersPage = () => {
 
   const getUserOrders = useCallback(async () => {
     setIsLoading(true);
-    try {
-      const res = await api.get(USER_API_ROUTES.ORDERS.GET);
-      if (res.status === AppHttpStatusCodes.OK) {
-        setOrders(res.data.data || []);
-      }
-      } catch {
-        toast.error("Failed to sync order archives");
-    } finally {
-      setIsLoading(false);
+    const res = await OrderService.getOrders();
+    if (res.success) {
+      setOrders(res.data || []);
     }
+    setIsLoading(false);
   }, []);
 
   useEffect(() => {
@@ -62,22 +54,17 @@ const OrdersPage = () => {
   };
 
   const handleStatusChange = async (id: string, reason: string, payment: string) => {
-    try {
-      const res = await api.patch(USER_API_ROUTES.ORDERS.CANCEL_OR_RETURN_ORDER, {
-        id,
-        reason,
-        type: modalType,
-        payment,
-      });
-      if (res.status === AppHttpStatusCodes.OK) {
-        toast.success(res.data.message);
-        const type = res.data.data;
-        const status = type === "cancel" ? "Cancelled" : "Returned";
-        setOrders(prev => prev.map(o => o._id === id ? { ...o, status } : o));
-        setModalOpen(false);
-      }
-    } catch (error) {
-      if (error instanceof AxiosError) toast.error(error.response?.data.message || "Operation failed");
+    const res = await OrderService.cancelOrReturnOrder({
+      id,
+      reason,
+      type: modalType,
+      payment,
+    });
+    if (res.success) {
+      const type = res.data;
+      const status = type === "cancel" ? "Cancelled" : "Returned";
+      setOrders(prev => prev.map(o => o._id === id ? { ...o, status } : o));
+      setModalOpen(false);
     }
   };
 
@@ -125,26 +112,29 @@ const OrdersPage = () => {
   };
 
   const handleRetryPayment = async (orderId: string, totalPrice: number) => {
-    const keyRes = await api.get("/user/getkey");
-    const { data: orderRes } = await api.post(USER_API_ROUTES.PAYMENT.CREATE_RAZORPAY_ORDER, { totalPrice });
+    const keyRes = await CheckoutService.getRazorpayKey();
+    const orderRes = await CheckoutService.createRazorpayOrder(totalPrice);
+
+    if (!keyRes.success || !orderRes.success) return;
 
     const options = {
-      key: keyRes.data.data,
+      key: keyRes.data.key,
       amount: orderRes.data.amount,
       currency: "INR",
       name: "PentaLuxe Re-Authorization",
       description: "Retry Payment Protocol",
       order_id: orderRes.data.id,
       handler: async (response: { razorpay_payment_id: string; razorpay_order_id: string; razorpay_signature: string }) => {
-        await api.put(USER_API_ROUTES.PAYMENT.RETRY_PAYMENT, {
+        const res = await CheckoutService.retryPayment({
           razorpay_payment_id: response.razorpay_payment_id,
           razorpay_order_id: response.razorpay_order_id,
           razorpay_signature: response.razorpay_signature,
           orderId,
           retryPayment: true,
         });
-        toast.success("Payment verified. Status updated.");
-        getUserOrders();
+        if (res.success) {
+          getUserOrders();
+        }
       },
       prefill: { name: "PentaLuxe Collector" },
       theme: { color: pentaluxeTheme.primary },

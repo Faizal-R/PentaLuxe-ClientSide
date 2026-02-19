@@ -1,12 +1,9 @@
 import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import Input from "@/components/Input/Input";
-import api from "@/services/apiService";
-import { AppHttpStatusCodes } from "@/types/statusCode";
-import { toast } from "sonner";
 import { addressValidation } from "@/utils/AddressValidation";
-import { USER_API_ROUTES } from "@/routes/api/UserApiRoutes";
-
+import { ProfileService } from "@/services/user/ProfileService";
+import { errorToast } from "@/utils/customToast";
 
 interface InputField {
   label: FormKeys;
@@ -23,6 +20,7 @@ const inputsArray: InputField[] = [
   { label: "State", type: "text" },
   { label: "District", type: "text" },
 ];
+
 type FormKeys =
   | "Name"
   | "Phone"
@@ -32,6 +30,7 @@ type FormKeys =
   | "Landmark"
   | "District"
   | "State";
+
 const AddAndEditAddress = () => {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -51,33 +50,29 @@ const AddAndEditAddress = () => {
     e.preventDefault();
     const validationError = addressValidation(formState);
     if (validationError) {
-      toast.error(validationError); 
+      errorToast(validationError); 
       return;
     }
-    try {
-      let res;
 
-      if (action === "Add") {
-        res = await api.post(USER_API_ROUTES.ADDRESS_BOOK.ADD_ADDRESS_BOOK, {
-          formState,
-          addressType,
-        });
-      } else {
-        res = await api.put(USER_API_ROUTES.ADDRESS_BOOK.UPDATE_ADDRESS_BOOK, {
-          formState,
-          addressType,
-          addressId:id
+    let res;
+    if (action === "Add") {
+      res = await ProfileService.addAddress({
+        formState,
+        addressType,
+      });
+    } else {
+      res = await ProfileService.updateAddress({
+        formState,
+        addressType,
+        addressId: id
+      });
+    }
 
-        });
-      }
-
-      if (res.status === AppHttpStatusCodes.CREATED || AppHttpStatusCodes.OK) {
-        navigate("/profile/address-book");
-      }
-    } catch (err) {
-      toast.error("Error adding/updating address:");
+    if (res.success) {
+      navigate("/profile/address-book");
     }
   };
+
   const onInputHandler = (e: ChangeEvent<HTMLInputElement>): void => {
     const { name, value } = e.target;
 
@@ -90,16 +85,12 @@ const AddAndEditAddress = () => {
   useEffect(() => {
     if (id) {
       const fetchAddress = async () => {
-        try {
-          const response = await api.get(USER_API_ROUTES.ADDRESS_BOOK.GET_BY_ID(id));
-          console.log("addresssss",response)
-          setFormState(response.data.data);
-          setAddressType(response.data.data.addressType)
-        } catch (error) {
-          console.error("Error fetching address:", error);
+        const res = await ProfileService.getAddressById(id);
+        if (res.success) {
+          setFormState(res.data);
+          setAddressType(res.data.addressType);
         }
       };
-
       fetchAddress();
     }
   }, [id]);
@@ -126,7 +117,7 @@ const AddAndEditAddress = () => {
           <div className="address-radio flex gap-5">
             <div className="flex gap-2">
               <input
-                value="home" // Set the value specific to this option
+                value="home"
                 type="radio"
                 name="addressType"
                 id="home"
@@ -142,7 +133,7 @@ const AddAndEditAddress = () => {
                 type="radio"
                 name="addressType"
                 id="work"
-                checked={addressType === "work"} // This ensures the correct radio button is checked
+                checked={addressType === "work"}
                 onChange={(e) => setAddressType(e.target.value)}
               />
               <p>Work</p>
@@ -153,7 +144,7 @@ const AddAndEditAddress = () => {
                 type="radio"
                 name="addressType"
                 id="Other"
-                checked={addressType === "Other"} // This ensures the correct radio button is checked
+                checked={addressType === "Other"}
                 onChange={(e) => setAddressType(e.target.value)}
               />
               <p>Other</p>
@@ -182,3 +173,4 @@ const AddAndEditAddress = () => {
 };
 
 export default AddAndEditAddress;
+

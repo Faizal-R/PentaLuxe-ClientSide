@@ -1,12 +1,7 @@
 
 import Pagination from "@/components/Pagination";
-import api from "@/services/apiService";
-import { AppHttpStatusCodes } from "@/types/statusCode";
-import { AxiosError } from "axios";
 import React, { useEffect, useState } from "react";
 import { IOrder } from "@/types/orderTypes";
-import { toast } from "sonner";
-import { ADMIN_API_ROUTES } from "@/routes/api/AdminApiRoutes";
 import { 
   Package,
   MapPin, 
@@ -17,6 +12,9 @@ import {
   ShoppingBag,
   Clock
 } from "lucide-react";
+import { AdminOrderService } from "@/services/admin/AdminOrderService";
+import { successToast } from "@/utils/customToast";
+import { toast } from "sonner";
 
 const AdminOrderManagement: React.FC = () => {
   const [orders, setOrders] = useState<IOrder[] | []>([]);
@@ -25,12 +23,10 @@ const AdminOrderManagement: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleStatusChange = async (status: string, orderId: string) => {
-    try {
-      const res = await api.patch(ADMIN_API_ROUTES.ORDERS_MANAGEMENT.HANDLE_ORDER_STATUS, { status, orderId });
-      setOrders(prev => prev.map((order) => order._id === orderId ? { ...order, status: res.data.data.status } : order));
-      toast.success("Status update confirmed.");
-    } catch (error) {
-      if (error instanceof AxiosError) toast.error(error.response?.data.message);
+    const res = await AdminOrderService.updateOrderStatus(orderId, status);
+    if (res.success) {
+      setOrders(prev => prev.map((order) => order._id === orderId ? { ...order, status: res.data.status } : order));
+      successToast("Status update confirmed.");
     }
   };
 
@@ -76,14 +72,10 @@ const AdminOrderManagement: React.FC = () => {
   };
 
   const getAllOrders = async () => {
-    try {
-      const res = await api.get(ADMIN_API_ROUTES.ORDERS_MANAGEMENT.GET_ALL);
-      if (res.status === AppHttpStatusCodes.OK) {
-        setOrders(res.data.data);
-        setPaginatedOrders(res.data.data.slice(0, 10));
-      }
-    } catch (err) {
-      console.error(err);
+    const res = await AdminOrderService.getAllOrders();
+    if (res.success) {
+      setOrders(res.data);
+      setPaginatedOrders(res.data.slice(0, 10));
     }
   };
 

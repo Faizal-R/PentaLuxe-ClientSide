@@ -2,53 +2,31 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { auth, provider } from "./Config";
 import { signInWithPopup } from "firebase/auth";
-import api from "../../services/apiService";
-import {  toast } from "sonner";
-import { AppHttpStatusCodes } from "@/types/statusCode";
 import { useDispatch } from "react-redux";
 import { LogIn } from "@/store/slices/userSlice";
-import { USER_API_ROUTES } from "@/routes/api/UserApiRoutes";
+
 
 type GoogleAuthProps = {
   text: string;
 };
+import { AuthService } from "@/services/user/AuthService";
+
 const GoogleAuth: React.FC<GoogleAuthProps> = ({ text }) => {
   const navigate = useNavigate();
- const dispatch=useDispatch()
+  const dispatch = useDispatch();
+
   const handleSignIn = () => {
     signInWithPopup(auth, provider).then(async (data) => {
       if (data.user) {
-        try {
-        
-          const response = await api.post(USER_API_ROUTES.AUTH.GOOGLE_AUTH, {
-            username: data.user.displayName,
-            email: data.user.email,
-          });
-          if (response.status===AppHttpStatusCodes.OK) {
-           
-            const data=response.data.data
-            console.log("inside the GoogleAuth")
-            dispatch(LogIn())
-            localStorage.setItem("accessToken",data.accessToken);
-         
-       
-            const promise = () =>
-              new Promise((resolve) =>
-                setTimeout(() => resolve({ name: "Sonner" }), 2000)
-              );
-            toast.promise(promise, {
-              loading: "Loading...",
-              success: () => {
-                setTimeout(() => {
-                  navigate("/");
-                }, 1000);
-                return response.data.message;
-              },
-              error: "Error occurred",
-            });
-          }
-        } catch (error: any) {
-          toast.error(error?.response?.data.message);
+        const res = await AuthService.googleAuth({
+          username: data.user.displayName,
+          email: data.user.email,
+        });
+
+        if (res.success) {
+          dispatch(LogIn());
+          localStorage.setItem("accessToken", res.data.accessToken);
+          navigate("/");
         }
       }
     });

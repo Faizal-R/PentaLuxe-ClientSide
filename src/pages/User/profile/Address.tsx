@@ -1,12 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { AppHttpStatusCodes } from "@/types/statusCode";
-import api from "@/services/apiService";
 import DeleteModal from "@/components/ui/modal/DeleteModal";
-import { USER_API_ROUTES } from "@/routes/api/UserApiRoutes";
 import { pentaluxeTheme } from "@/theme";
-import { MapPin, Plus, Edit3, Trash2, Globe, Phone, Map, ShieldCheck } from "lucide-react";
-import { toast } from "sonner";
+import { MapPin, Plus, Edit3, Trash2, Globe, Phone, Map } from "lucide-react";
+import { ProfileService } from "@/services/user/ProfileService";
 
 interface IAddress {
   _id: string;
@@ -33,30 +30,21 @@ const Address = () => {
 
   const isModalClose = () => {
     setIsModal(false);
+    setItemId("");
   };
 
   const getAllAddresses = async () => {
-    try {
-      const res = await api.get(USER_API_ROUTES.ADDRESS_BOOK.GET);
-      if (res.status === AppHttpStatusCodes.OK) {
-        setAddresses(res.data.data);
-      }
-    } catch (err) {
-      toast.error("Failed to load address book");
+    const res = await ProfileService.getAddressBook();
+    if (res.success) {
+      setAddresses(res.data);
     }
   };
 
   const onAddressDelete = async () => {
-    try {
-      const res = await api.delete(USER_API_ROUTES.ADDRESS_BOOK.DELETE_ADDRESS_BOOK(ItemId));
-      if (res.status === AppHttpStatusCodes.OK) {
-        setAddresses((prev) => prev.filter(a => a._id !== ItemId));
-        toast.success("Address deleted successfully");
-        isModalClose();
-      }
-    } catch (error) {
-      console.log(error)
-      toast.error("Failed to delete address");
+    const res = await ProfileService.deleteAddress(ItemId);
+    if (res.success) {
+      setAddresses((prev) => prev.filter(a => a._id !== ItemId));
+      isModalClose();
     }
   };
 
@@ -150,7 +138,6 @@ const Address = () => {
                   <Phone className="w-3 h-3 text-emerald-500/40" />
                   <span className="text-xs font-mono">{addr.Phone}</span>
                </div>
-               <ShieldCheck className="w-4 h-4 text-emerald-500/20" />
             </div>
 
             {/* Background Aesthetic */}

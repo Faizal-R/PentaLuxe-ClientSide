@@ -1,15 +1,10 @@
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { IProduct } from "@/types/productTypes";
-import api from "@/services/apiService";
-import { toast } from "sonner";
 import { addToCart } from "@/store/slices/cartSlice";
 import { useDispatch } from "react-redux";
-import { AppHttpStatusCodes } from "@/types/statusCode";
-import { AxiosError } from "axios";
-import { USER_API_ROUTES } from "@/routes/api/UserApiRoutes";
-import { pentaluxeTheme } from "@/theme";
 import { ShoppingBag, Star, Heart, Sparkles } from "lucide-react";
+import { CartService } from "@/services/user/CartService";
 
 interface IProductCardProps {
   product: IProduct;
@@ -22,29 +17,15 @@ const ProductCard: React.FC<IProductCardProps> = ({ product }) => {
   const AddToCart = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    try {
-      const res = await api.post(USER_API_ROUTES.CART.ADD_TO_CART, {
-        productId: product?._id,
-        volume: product.Variants[0].volume,
-        stock: product.Variants?.[0].stock,
-      });
-      if (res.status === AppHttpStatusCodes.OK) {
-        toast.success(res.data.message, {
-          style: {
-            background: pentaluxeTheme.background,
-            color: pentaluxeTheme.primary,
-            border: `1px solid ${pentaluxeTheme.primary}40`,
-          },
-        });
-        dispatch(addToCart(res.data.data));
-      }
-    } catch (error) {
-      if (error instanceof AxiosError) {
-        if (error.response?.status === AppHttpStatusCodes.UNAUTHORIZED) {
-          navigate("/login");
-        }
-        toast.error(error.response?.data.message);
-      }
+    const res = await CartService.addToCart({
+      productId: product?._id,
+      volume: product.Variants[0].volume,
+      stock: product.Variants?.[0].stock,
+    });
+    if (res.success) {
+      dispatch(addToCart(res.data));
+    } else if (res.status === 401) {
+      navigate("/login");
     }
   };
 

@@ -1,15 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
-import api from "@/services/apiService";
-import { toast } from "sonner";
 import { useNavigate, useParams } from "react-router-dom";
-import { AxiosError } from "axios";
-import { AppHttpStatusCodes } from "@/types/statusCode";
 import { IProduct } from "@/types/productTypes";
 import { useDispatch } from "react-redux";
 import { addToCart } from "@/store/slices/cartSlice";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import ProductCard from "@/components/ProductCard";
-import { USER_API_ROUTES } from "@/routes/api/UserApiRoutes";
 import { pentaluxeTheme } from "@/theme";
 import { 
   ShoppingBag, 
@@ -17,9 +12,11 @@ import {
   Star, 
   ShieldCheck, 
   Zap, 
-  ArrowLeft,
-  Share2,
+  ArrowLeft 
 } from "lucide-react";
+import { ProductService } from "@/services/user/ProductService";
+import { CartService } from "@/services/user/CartService";
+import { WishlistService } from "@/services/user/WishlistService";
 
 const ProductDetailPage = () => {
   const navigate = useNavigate();
@@ -32,37 +29,29 @@ const ProductDetailPage = () => {
   const [wishlistToggle, setWishlistToggle] = useState(false);
   const [relatedProducts, setRelatedProducts] = useState<IProduct[]>([]);
   const [discountPrice, setDiscountPrice] = useState(0);
-
+ 
   const fetchProduct = useCallback(async () => {
-    try {
-      const response = await api.get(USER_API_ROUTES.PRODUCTS.GET_BY_ID(id as string));
-      if (response.data.success) {
-        const prod = response.data.data;
-        setProduct(prod);
-        if (prod.Variants?.length > 0) {
-          setSelectedVolume(prod.Variants[0].volume);
-        }
-        fetchRelatedProducts(prod.CategoryId.categoryName);
+    if (!id) return;
+    const res = await ProductService.getProductById(id);
+    if (res.success) {
+      const prod = res.data;
+      setProduct(prod);
+      if (prod.Variants?.length > 0) {
+        setSelectedVolume(prod.Variants[0].volume);
       }
-    } catch (error) {
-      if (error instanceof AxiosError) toast.error(error.response?.data.message);
+      fetchRelatedProducts(prod.CategoryId.categoryName);
     }
   }, [id]);
 
   const fetchRelatedProducts = async (category: string) => {
-    try {
-      const res = await api.post(USER_API_ROUTES.PRODUCTS.GET_RELATED_PRODUCTS, { categoryName: category });
-      if (res.status === AppHttpStatusCodes.OK) setRelatedProducts(res.data.data);
-    } catch (error) {
-      if (error instanceof AxiosError) toast.error(error.response?.data.message);
-    }
+    const res = await ProductService.getRelatedProducts({ categoryName: category });
+    if (res.success) setRelatedProducts(res.data);
   };
 
   const checkWishlistStatus = useCallback(async () => {
-    try {
-      const res = await api.get(USER_API_ROUTES.WISHLIST.CHECK_PRODUCT(id as string));
-      if (res.status === AppHttpStatusCodes.OK && res.data.success) setWishlistToggle(true);
-    } catch (err) { console.error("Wishlist check failed"); }
+    if (!id) return;
+    const res = await WishlistService.checkInWishlist(id);
+    if (res.success) setWishlistToggle(true);
   }, [id]);
 
   useEffect(() => {
@@ -84,40 +73,28 @@ const ProductDetailPage = () => {
 
   const handleAddToCart = async () => {
     const selectedVariant = product?.Variants.find(v => v.volume === selectedVolume);
-    try {
-      const res = await api.post(USER_API_ROUTES.CART.ADD_TO_CART, {
-        productId: product?._id,
-        volume: selectedVolume,
-        stock: selectedVariant?.stock,
-      });
-      if (res.status === AppHttpStatusCodes.OK) {
-        toast.success("Added to your Shopping Cart");
-        dispatch(addToCart(res.data.data));
-      }
-    } catch (error) {
-      if (error instanceof AxiosError) {
-        if (error.response?.status === AppHttpStatusCodes.UNAUTHORIZED) navigate("/login");
-        toast.error(error.response?.data.message);
-      }
+    const res = await CartService.addToCart({
+      productId: product?._id,
+      volume: selectedVolume,
+      stock: selectedVariant?.stock,
+    });
+    if (res.success) {
+      dispatch(addToCart(res.data));
+    } else if (res.status === 401) {
+      navigate("/login");
     }
   };
 
   const toggleWishlist = async () => {
-    try {
-      if (wishlistToggle) {
-        await api.delete(USER_API_ROUTES.WISHLIST.REMOVE_FROM_WISHLIST(product?._id as string));
-        setWishlistToggle(false);
-        toast.success("Removed from Wishlist");
-      } else {
-        await api.post(USER_API_ROUTES.WISHLIST.ADD_TO_WISHLIST, {
-          productId: product?._id,
-          variant: selectedVolume,
-        });
-        setWishlistToggle(true);
-        toast.success("Added to Wishlist");
-      }
-    } catch (error) {
-      if (error instanceof AxiosError) toast.error(error.response?.data.message);
+    if (wishlistToggle) {
+      const res = await WishlistService.removeFromWishlist(product?._id as string);
+      if (res.success) setWishlistToggle(false);
+    } else {
+      const res = await WishlistService.addToWishlist({
+        productId: product?._id,
+        variant: selectedVolume,
+      });
+      if (res.success) setWishlistToggle(true);
     }
   };
 

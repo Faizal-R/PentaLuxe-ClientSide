@@ -1,9 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import ProductCard from "@/components/ProductCard";
-import api from "@/services/apiService";
-import { AxiosError } from "axios";
-import { toast } from "sonner";
 import {
   Sparkles,
   ShieldCheck,
@@ -17,10 +14,9 @@ import {
   Waves,
 } from "lucide-react";
 
-import { AppHttpStatusCodes } from "@/types/statusCode";
 import { IProduct } from "@/types/productTypes";
-import { USER_API_ROUTES } from "@/routes/api/UserApiRoutes";
 import { pentaluxeTheme } from "@/theme";
+import { ProductService } from "@/services/user/ProductService";
 
 interface Categories {
   _id: string;
@@ -34,34 +30,16 @@ const HomePage = () => {
   const [activeStat, setActiveStat] = useState(0);
 
   const getCategories = useCallback(async () => {
-    try {
-      const response = await api.get(USER_API_ROUTES.CATEGORIES.GET);
-      if (response.status === AppHttpStatusCodes.OK) {
-        setCategories(response.data.data);
-      }
-    } catch (error) {
-      if (error instanceof AxiosError) {
-        toast.error(
-          error.response?.data.message ||
-            "Error Occured While fetching Categories",
-        );
-      }
+    const res = await ProductService.getCategories();
+    if (res.success) {
+      setCategories(res.data);
     }
   }, []);
 
   const getProducts = useCallback(async () => {
-    try {
-      const response = await api.get(USER_API_ROUTES.PRODUCTS.GET);
-      if (response.data.success) {
-        setProducts(response.data.data);
-      }
-    } catch (error) {
-      if (error instanceof AxiosError) {
-        toast.error(
-          error.response?.data.message ||
-            "Something went Wrong While Fetching LatestProducts",
-        );
-      }
+    const res = await ProductService.getProducts();
+    if (res.success) {
+      setProducts(res.data);
     }
   }, []);
 

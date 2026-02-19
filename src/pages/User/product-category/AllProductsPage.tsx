@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState } from "react";
-import api from "@/services/apiService";
 import ProductCard from "@/components/ProductCard";
 import { IProduct } from "@/types/productTypes";
 import Pagination from "@/components/Pagination";
@@ -10,10 +9,8 @@ import {
   Sparkles,
   AlertTriangle
 } from "lucide-react";
-import { AxiosError } from "axios";
-import { toast } from "sonner";
-import { USER_API_ROUTES } from "@/routes/api/UserApiRoutes";
 import { pentaluxeTheme } from "@/theme";
+import { ProductService } from "@/services/user/ProductService";
 
 const AllProductsPage = () => {
   const [searchedProducts, setSearchedProducts] = useState<IProduct[]>([]);
@@ -27,18 +24,14 @@ const AllProductsPage = () => {
   const [isSearching, setIsSearching] = useState(false);
 
   const fetchProducts = useCallback(async () => {
-    try {
-      const response = await api.get(USER_API_ROUTES.PRODUCTS.GET);
-      const { data: fetchResult } = response.data;
+    const res = await ProductService.getProducts();
+    if (res.success) {
+      const fetchResult = res.data;
       setProducts(fetchResult);
       
       if (searchedProducts.length === 0) {
         setSortedProducts(fetchResult);
         setDisplayedProducts(fetchResult);
-      }
-    } catch (error) {
-      if (error instanceof AxiosError) {
-        toast.error(error.response?.data.message || "Failed to fetch products");
       }
     }
   }, [searchedProducts.length]);
@@ -87,19 +80,12 @@ const AllProductsPage = () => {
     if (!input.trim()) return;
 
     setIsSearching(true);
-    try {
-      const res = await api.post(USER_API_ROUTES.PRODUCTS.SEARCH_BY_CATEGORY, { text: input });
-      if (res.status === 200) {
-        setSearchedProducts(res.data.data);
-        setFilterActive(true);
-      }
-    } catch (error) {
-      if (error instanceof AxiosError) {
-        toast.error(error.response?.data.message || "Search failed");
-      }
-    } finally {
-      setIsSearching(false);
+    const res = await ProductService.searchByCategory({ text: input });
+    if (res.success) {
+      setSearchedProducts(res.data);
+      setFilterActive(true);
     }
+    setIsSearching(false);
   };
 
   const clearAllFilters = () => {

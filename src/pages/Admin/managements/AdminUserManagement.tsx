@@ -1,13 +1,7 @@
-
 import React, { ChangeEvent, useEffect, useState } from "react";
-import api from "@/services/apiService";
-import { AxiosError } from "axios";
-import { useNavigate } from "react-router-dom";
-import { AppHttpStatusCodes } from "@/types/statusCode";
 import { toast } from "sonner";
 import { IAddress } from "@/types/AddressTypes";
 import Pagination from "@/components/Pagination";
-import { ADMIN_API_ROUTES } from "@/routes/api/AdminApiRoutes";
 import { 
   Search, 
   ShieldAlert, 
@@ -18,6 +12,7 @@ import {
   Lock,
   Unlock
 } from "lucide-react";
+import { AdminUserService } from "@/services/admin/AdminUserService";
 
 interface IUser {
   _id: string;
@@ -29,7 +24,6 @@ interface IUser {
 }
 
 const AdminUserManagement = () => {
-  const navigate = useNavigate();
   const [users, setUsers] = useState<IUser[]>([]);
   const [searchedUsers, setSearchedUsers] = useState<IUser[]>([]); 
   const [displayedUsers, setDisplayedUsers] = useState<IUser[]>([]);
@@ -40,38 +34,30 @@ const AdminUserManagement = () => {
   };
 
   const getAllUsers = React.useCallback(async () => {
-    try {
-      const response = await api.get(ADMIN_API_ROUTES.USERS_MANAGEMENT.GET);
-      if (response.data.success) {
-        setUsers(response.data.data);
-        setDisplayedUsers(response.data.data.slice(0, 8));
-      }
-    } catch (error) {
-      if (error instanceof AxiosError && error.response?.status === AppHttpStatusCodes.FORBIDDEN) {
-        navigate('/admin');
-      }
+    const res = await AdminUserService.getAllUsers();
+    if (res.success) {
+      setUsers(res.data);
+      setDisplayedUsers(res.data.slice(0, 8));
     }
-  }, [navigate]);
+  }, []);
 
   const toggleBlock = async (id: string) => {
-    const updatedUsers = (prevUsers: IUser[]) =>
-      prevUsers.map((user) =>
-        user._id === id
-          ? { ...user, status: user.status === "ACTIVE" ? "BLOCKED" : "ACTIVE" }
-          : user
-      );
-  
-    setUsers((prevUsers) => updatedUsers(prevUsers));
-    setSearchedUsers((prevUsers) => updatedUsers(prevUsers));
-  
-    try {
-      await api.patch(ADMIN_API_ROUTES.USERS_MANAGEMENT.UPDATE_STATUS, {
-        id,
-        status: users.find((user) => user._id === id)?.status,
-      });
-      toast.success("Security protocol updated.");
-    } catch (error) {
-      if (error instanceof AxiosError && error.response?.status === 403) navigate('/admin');
+    const currentUser = users.find(u => u._id === id);
+    if (!currentUser) return;
+
+    const newStatus = currentUser.status === "ACTIVE" ? "BLOCKED" : "ACTIVE";
+    
+    const res = await AdminUserService.updateUserStatus(id, newStatus);
+    if (res.success) {
+      const updatedUsers = (prevUsers: IUser[]) =>
+        prevUsers.map((user) =>
+          user._id === id
+            ? { ...user, status: newStatus }
+            : user
+        );
+    
+      setUsers((prevUsers) => updatedUsers(prevUsers));
+      setSearchedUsers((prevUsers) => updatedUsers(prevUsers));
     }
   };
 
@@ -123,14 +109,10 @@ const AdminUserManagement = () => {
       return;
     }
 
-    try {
-      const res = await api.post(ADMIN_API_ROUTES.USERS_MANAGEMENT.SEARCH_USER, { text: input });
-      if (res.status === AppHttpStatusCodes.OK) {
-        setSearchedUsers(res.data.users);
-        setDisplayedUsers(res.data.users.slice(0, 8));
-      }
-    } catch (error) {
-      if (error instanceof AxiosError) toast.error(error.response?.data.message);
+    const res = await AdminUserService.searchUser(input);
+    if (res.success) {
+      setSearchedUsers(res.data);
+      setDisplayedUsers(res.data.slice(0, 8));
     }
   };
 

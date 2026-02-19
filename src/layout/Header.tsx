@@ -13,12 +13,9 @@ import {
 } from "lucide-react";
 import { setCartProducts } from "@/store/slices/cartSlice";
 import { toast } from "sonner";
-import { AxiosError } from "axios";
-import { AppHttpStatusCodes } from "@/types/statusCode";
-import api from "@/services/apiService";
 import { logOut } from "@/store/slices/userSlice";
-import { USER_API_ROUTES } from "@/routes/api/UserApiRoutes";
 import { pentaluxeTheme } from "@/theme";
+import { CartService } from "@/services/user/CartService";
 
 const Header = () => {
   const user = useSelector((state: any) => state.user.user);
@@ -30,15 +27,9 @@ const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const getCartProducts = useCallback(async () => {
-    try {
-      const res = await api.get(USER_API_ROUTES.CART.GET);
-      if (res.status === AppHttpStatusCodes.OK) {
-        dispatch(setCartProducts(res.data.data || []));
-      }
-    } catch (error) {
-      if (error instanceof AxiosError && error.response?.status !== 401) {
-        console.error("Cart fetch error:", error);
-      }
+    const res = await CartService.getCart();
+    if (res.success) {
+      dispatch(setCartProducts(res.data || []));
     }
   }, [dispatch]);
 

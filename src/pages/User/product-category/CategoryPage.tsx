@@ -1,13 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import api from "@/services/apiService";
 import ProductCard from "@/components/ProductCard";
 import { IProduct } from "@/types/productTypes";
-import { AppHttpStatusCodes } from "@/types/statusCode";
 import Pagination from "@/components/Pagination";
-import { USER_API_ROUTES } from "@/routes/api/UserApiRoutes";
 import { pentaluxeTheme } from "@/theme";
 import { ArrowLeft, Sparkles, AlertCircle } from "lucide-react";
+import { ProductService } from "@/services/user/ProductService";
 
 const CategoryPage = () => {
   const { id } = useParams();
@@ -19,19 +17,16 @@ const CategoryPage = () => {
 
   const fetchCategoryProducts = useCallback(async () => {
     setIsLoading(true);
-    try {
-      const res = await api.get(USER_API_ROUTES.CATEGORIES.GET_ALL_PRODUCTS_BY_CATEGORY(id as string));
-      if (res.status === AppHttpStatusCodes.OK) {
-        const fetchResult = res.data.data;
-        setProducts(fetchResult);
-        if (fetchResult.length > 0) {
-          setCategoryName(fetchResult[0].CategoryId.categoryName);
-        }
+    if (!id) return;
+    const res = await ProductService.getProductsByCategory(id);
+    if (res.success) {
+      const fetchResult = res.data;
+      setProducts(fetchResult);
+      if (fetchResult.length > 0) {
+        setCategoryName(fetchResult[0].CategoryId.categoryName);
       }
-    } catch (error) {
-    } finally {
-      setIsLoading(false);
     }
+    setIsLoading(false);
   }, [id]);
 
   useEffect(() => {

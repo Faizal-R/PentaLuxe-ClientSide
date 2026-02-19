@@ -1,14 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import * as XLSX from "xlsx";
 import { IOrder } from "@/types/orderTypes";
-import { AppHttpStatusCodes } from "@/types/statusCode";
-import api from "@/services/apiService";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import Pagination from "@/components/Pagination";
 import { PulseLoader } from "react-spinners";
 import { toast } from "sonner";
-import { ADMIN_API_ROUTES } from "@/routes/api/AdminApiRoutes";
+import { AdminStatsService } from "@/services/admin/AdminStatsService";
 
 const AdminSalesReport = () => {
   const [loading, setLoading] = useState(false);
@@ -29,21 +27,14 @@ const AdminSalesReport = () => {
     setDisplaySalesReportData(currentPageData);
   };
 
-  const getAllSalesReport = async () => {
-    try {
-      setLoading(true);
-      const res = await api.post(ADMIN_API_ROUTES.SALES_REPORT.GET_ALL, {
-        dateRange,
-      });
-      if (res.status === AppHttpStatusCodes.OK) {
-        setSalesReportData(res.data.data);
-      }
-    } catch (err) {
-      toast("Failed to fetch sales report. Please try again.");
-    } finally {
-      setLoading(false);
+  const getAllSalesReport = useCallback(async () => {
+    setLoading(true);
+    const res = await AdminStatsService.generateSalesReport({ dateRange });
+    if (res.success) {
+      setSalesReportData(res.data);
     }
-  };
+    setLoading(false);
+  }, [dateRange]);
 
   const downloadExcel = () => {
     const title = "Sales Report";
@@ -168,26 +159,19 @@ const AdminSalesReport = () => {
         return;
       }
     }
-    setLoading(true);
 
     const payload = {
       dateRange,
       startDate: customDates.startDate,
       endDate: customDates.endDate,
     };
-    try {
-      const response = await api.post(
-        ADMIN_API_ROUTES.SALES_REPORT.GENERATE,
-        payload,
-      );
-      if (response.status === AppHttpStatusCodes.OK) {
-        setSalesReportData(response.data.data);
-      }
-    } catch (err) {
-      toast("Failed to generate sales report. Please try again.");
-    } finally {
-      setLoading(false);
+
+    setLoading(true);
+    const res = await AdminStatsService.generateSalesReport(payload);
+    if (res.success) {
+      setSalesReportData(res.data);
     }
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -197,7 +181,7 @@ const AdminSalesReport = () => {
         return acc + order.totalAmount;
       }, 0);
 
-    totalOrderPrice && setTotalOrderAmount(totalOrderPrice);
+    if (totalOrderPrice) setTotalOrderAmount(totalOrderPrice);
 
     const totalCouponDiscount =
       salesReportData &&
@@ -205,14 +189,14 @@ const AdminSalesReport = () => {
         return acc + order.couponDiscount;
       }, 0);
 
-    totalCouponDiscount && setTotalDiscount(totalCouponDiscount);
+    if (totalCouponDiscount) setTotalDiscount(totalCouponDiscount);
 
-    salesReportData && setSalesCount(salesReportData.length);
+    if (salesReportData) setSalesCount(salesReportData.length);
   }, [salesReportData]);
 
   useEffect(() => {
     getAllSalesReport();
-  }, []);
+  }, [getAllSalesReport]);
 
   return (
     <div className="p-8 bg-white min-h-screen text-gray-700">

@@ -2,12 +2,6 @@
 import React, { FormEvent, useEffect, useState } from "react";
 import { IProduct } from "@/types/productTypes";
 import { ICategories } from "../product-category/AdminCategoryPage";
-import { AxiosError } from "axios";
-import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
-import api from "@/services/apiService";
-import { AppHttpStatusCodes } from "@/types/statusCode";
-import { ADMIN_API_ROUTES } from "@/routes/api/AdminApiRoutes";
 import { 
   Plus, 
   Percent, 
@@ -18,6 +12,10 @@ import {
   BarChart3,
   ListFilter
 } from "lucide-react";
+import { AdminOfferService } from "@/services/admin/AdminOfferService";
+import { AdminProductService } from "@/services/admin/AdminProductService";
+import { AdminCategoryService } from "@/services/admin/AdminCategoryService";
+import { errorToast, successToast } from "@/utils/customToast";
 
 interface IOffers {
   offerFor: IProduct | ICategories;
@@ -33,74 +31,53 @@ const AdminOfferPage: React.FC = () => {
   const [offerItems, setOfferItems] = useState<IProduct[] | ICategories[]>([]);
   const [selectedOfferItem, setSelectedOfferItem] = useState("");
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
 
   const handleOfferSubmission = async (e: FormEvent) => {
     e.preventDefault();
     if (!offerType || !DiscountPercentage || !selectedOfferItem) {
-      toast.error("Integrity error: Configuration data incomplete.");
+      errorToast("Integrity error: Configuration data incomplete.");
       return;
     }
 
-    try {
-      setLoading(true);
-      const endpoint = offerType === "product"
-        ? ADMIN_API_ROUTES.OFFERS_MANAGEMENT.UPDATE_PRODUCT_OFFER
-        : ADMIN_API_ROUTES.OFFERS_MANAGEMENT.UPDATE_CATEGORY_OFFER;
-      
-      const response = await api.patch(endpoint, {
-        DiscountPercentage,
-        itemId: selectedOfferItem,
-      });
+    setLoading(true);
+    const res = offerType === "product"
+      ? await AdminOfferService.updateProductOffer({ DiscountPercentage, itemId: selectedOfferItem })
+      : await AdminOfferService.updateCategoryOffer({ DiscountPercentage, itemId: selectedOfferItem });
 
-      if (response.status === AppHttpStatusCodes.OK) {
-        toast.success("Revenue protocol updated.");
-        setOfferType("");
-        setDiscountPercentage("");
-        setSelectedOfferItem("");
-        listOffers();
-      }
-    } catch (error) {
-      if (error instanceof AxiosError) toast.error(error.response?.data.message || "Protocol override failed.");
-    } finally {
-      setLoading(false);
+    if (res.success) {
+      successToast("Revenue protocol updated.");
+      setOfferType("");
+      setDiscountPercentage("");
+      setSelectedOfferItem("");
+      listOffers();
     }
+    setLoading(false);
   };
 
   const getAllProducts = React.useCallback(async () => {
-    try {
-      const res = await api.get(ADMIN_API_ROUTES.PRODUCTS_MANAGEMENT.GET_ALL);
-      if (res.data.success) setOfferItems(res.data.data);
-    } catch (error) {
-      if (error instanceof AxiosError && error.response?.status === 403) navigate("/admin");
-    }
-  }, [navigate]);
+    const res = await AdminProductService.getAllProducts();
+    if (res.success) setOfferItems(res.data);
+  }, []);
 
   const getCategories = React.useCallback(async () => {
-    try {
-      const response = await api.get(ADMIN_API_ROUTES.CATEGORIES_MANAGEMENT.GET);
-      if (response.data.success) setOfferItems(response.data.data);
-    } catch (error) {
-      if (error instanceof AxiosError && error.response?.status === 403) navigate("/admin");
-    }
-  }, [navigate]);
+    const res = await AdminCategoryService.getAllCategories();
+    if (res.success) setOfferItems(res.data);
+  }, []);
 
   const listOffers = React.useCallback(async () => {
-    try {
-      const res = await api.get(ADMIN_API_ROUTES.OFFERS_MANAGEMENT.GET_ALL);
-      if (res.status === AppHttpStatusCodes.OK) setOffers(res.data.data);
-    } catch (error) {
-      if (error instanceof AxiosError && error.response?.status === 403) navigate("/admin");
-    }
-  }, [navigate]);
+    const res = await AdminOfferService.getAllOffers();
+    if (res.success) setOffers(res.data);
+  }, []);
 
   useEffect(() => {
     listOffers();
   }, [listOffers]);
 
   useEffect(() => {
-    if (offerType) {
-      offerType === "product" ? getAllProducts() : getCategories();
+    if (offerType === "product") {
+      getAllProducts();
+    } else if (offerType === "category") {
+      getCategories();
     }
   }, [offerType, getAllProducts, getCategories]);
 

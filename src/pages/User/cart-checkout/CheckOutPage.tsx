@@ -2,19 +2,17 @@ import { Plus, ShieldCheck, MapPin, CreditCard, Wallet, Truck, AlertCircle, Arro
 import { ChangeEvent, FormEvent, useCallback, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
-import { AppHttpStatusCodes } from "@/types/statusCode";
-import api from "@/services/apiService";
-import { AxiosError } from "axios";
-import { toast } from "sonner";
 import { Cart } from "@/types/cartProductTypes";
 import { IAddress } from "@/types/AddressTypes";
 import { addressValidation } from "@/utils/AddressValidation";
 import AddressModal from "@/components/ui/modal/AddressModal";
-import { USER_API_ROUTES } from "@/routes/api/UserApiRoutes";
 import { pentaluxeTheme } from "@/theme";
 import { setCartProducts } from "@/store/slices/cartSlice";
-
-
+import { ProfileService } from "@/services/user/ProfileService";
+import { CartService } from "@/services/user/CartService";
+import { OrderService } from "@/services/user/OrderService";
+import { CheckoutService } from "@/services/user/CheckoutService";
+import { errorToast } from "@/utils/customToast";
 
 const inputsArray = [
   { label: "Name", type: "text" },
@@ -59,17 +57,12 @@ const CheckOutPage = () => {
   const couponCode = location.state?.selectedCoupon || "";
 
   const getUserData = useCallback(async () => {
-    try {
-      const [addrRes, cartRes] = await Promise.all([
-        api.get(USER_API_ROUTES.ADDRESS_BOOK.GET),
-        api.get(USER_API_ROUTES.CART.GET)
-      ]);
-      if (addrRes.status === AppHttpStatusCodes.OK) setAddresses(addrRes.data.data);
-      if (cartRes.status === AppHttpStatusCodes.OK) setProducts(cartRes.data.data);
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to fetch checkout data");
-    }
+    const [addrRes, cartRes] = await Promise.all([
+      ProfileService.getAddressBook(),
+      CartService.getCart()
+    ]);
+    if (addrRes.success) setAddresses(addrRes.data);
+    if (cartRes.success) setProducts(cartRes.data);
   }, []);
 
   useEffect(() => {
@@ -85,24 +78,22 @@ const CheckOutPage = () => {
   const onAddressHandler = async (e: FormEvent, action: string = "Add") => {
     e.preventDefault();
     const validationError = addressValidation(formState);
-    if (validationError) return toast.error(validationError);
+    if (validationError) return errorToast(validationError);
 
     setAddressBtnToggle(true);
-    try {
-      const res = action === "Add" 
-        ? await api.post(USER_API_ROUTES.ADDRESS_BOOK.ADD_ADDRESS_BOOK, { formState, addressType })
-        : await api.put(USER_API_ROUTES.ADDRESS_BOOK.UPDATE_ADDRESS_BOOK, { formState, addressType, addressId });
-
-      if (res.status === AppHttpStatusCodes.CREATED || res.status === AppHttpStatusCodes.OK) {
-        setIsModalOpen(false);
-        getUserData();
-        setFormState({ Name: "", Phone: "", Pincode: "", Locality: "", FlatNumberOrBuildingName: "", Landmark: "", District: "", State: "" });
-      }
-    } catch (err) {
-      if (err instanceof AxiosError) toast.error(err.response?.data.message || "Failed to save address");
-    } finally {
-      setAddressBtnToggle(false);
+    let res;
+    if (action === "Add") {
+      res = await ProfileService.addAddress({ formState, addressType });
+    } else {
+      res = await ProfileService.updateAddress({ formState, addressType, addressId });
     }
+
+    if (res.success) {
+      setIsModalOpen(false);
+      getUserData();
+      setFormState({ Name: "", Phone: "", Pincode: "", Locality: "", FlatNumberOrBuildingName: "", Landmark: "", District: "", State: "" });
+    }
+    setAddressBtnToggle(false);
   };
 
   const handleEditAddress = (addr: IAddress) => {
@@ -123,8 +114,8 @@ const CheckOutPage = () => {
   };
 
   const handlePlaceOrder = async () => {
-    if (!selectedAddress) return toast.error("Please select a shipping address");
-    if (!selectedPaymentMethod) return toast.error("Please select a payment method");
+    if (!selectedAddress) return errorToast("Please select a shipping address");
+    if (!selectedPaymentMethod) return errorToast("Please select a payment method");
 
     const orderDetails = {
       addressId: selectedAddress,
@@ -144,24 +135,22 @@ const CheckOutPage = () => {
       couponCode,
     };
 
-    try {
-      if (selectedPaymentMethod === "Razorpay") {
-        await handleRazorpay(orderDetails);
-      } else if (selectedPaymentMethod === "Wallet") {
-        const res = await api.post(USER_API_ROUTES.PAYMENT.WALLET_PAYMENT, { orderDetails, totalPrice });
-        if (res.status === AppHttpStatusCodes.CREATED) handleSuccess(res.data.data);
-      } else {
-        const res = await api.post(USER_API_ROUTES.ORDERS.PLACE_ORDER, orderDetails);
-        if (res.status === AppHttpStatusCodes.CREATED) handleSuccess(res.data.data);
-      }
-    } catch (error) {
-      if (error instanceof AxiosError) toast.error(error.response?.data.message);
+    if (selectedPaymentMethod === "Razorpay") {
+      await handleRazorpay(orderDetails);
+    } else if (selectedPaymentMethod === "Wallet") {
+      const res = await CheckoutService.walletPayment({ orderDetails, totalPrice });
+      if (res.success) handleSuccess(res.data);
+    } else {
+      const res = await OrderService.placeOrder(orderDetails);
+      if (res.success) handleSuccess(res.data);
     }
   };
 
   const handleRazorpay = async (orderDetails: any) => {
-    const keyRes = await api.get("/user/getkey");
-    const { data: orderRes } = await api.post(USER_API_ROUTES.PAYMENT.CREATE_RAZORPAY_ORDER, { totalPrice });
+    const keyRes = await CheckoutService.getRazorpayKey();
+    const orderRes = await CheckoutService.createRazorpayOrder(totalPrice);
+
+    if (!keyRes.success || !orderRes.success) return;
 
     const options = {
       key: keyRes.data.key,
@@ -171,13 +160,13 @@ const CheckOutPage = () => {
       description: "Secure Checkout Payment",
       order_id: orderRes.data.id,
       handler: async (response: { razorpay_payment_id: string; razorpay_order_id: string; razorpay_signature: string }) => {
-        const res = await api.post(USER_API_ROUTES.PAYMENT.VERIFY_AND_CREATE_ORDER, {
+        const res = await CheckoutService.verifyAndCreateOrder({
           razorpay_payment_id: response.razorpay_payment_id,
           razorpay_order_id: response.razorpay_order_id,
           razorpay_signature: response.razorpay_signature,
           orderDetails,
         });
-        if (res.status === AppHttpStatusCodes.CREATED) handleSuccess(res.data.data);
+        if (res.success) handleSuccess(res.data);
       },
       prefill: { name: "PentaLuxe Collector" },
       theme: { color: pentaluxeTheme.primary },
@@ -185,8 +174,8 @@ const CheckOutPage = () => {
 
     const rzp = new (window as any).Razorpay(options);
     rzp.on("payment.failed", async (response: any) => {
-      await api.post(USER_API_ROUTES.PAYMENT.PAYMENT_FAILURE, { response, orderDetails });
-      toast.error("Payment failed. Please try again.");
+      await CheckoutService.handlePaymentFailure({ response, orderDetails });
+      errorToast("Payment failed. Please try again.");
     });
     rzp.open();
   };

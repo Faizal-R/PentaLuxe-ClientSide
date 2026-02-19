@@ -1,8 +1,5 @@
 
-import { ADMIN_API_ROUTES } from "@/routes/api/AdminApiRoutes";
-import api from "@/services/apiService";
-import { AppHttpStatusCodes } from "@/types/statusCode";
-import { ChangeEvent, useEffect, useState } from "react";
+import { ChangeEvent, useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import {
   BarChart,
@@ -17,15 +14,14 @@ import {
 import { 
   TrendingUp, 
   ShoppingBag, 
-  Users, 
   ArrowUpRight, 
   Plus, 
   Layers, 
   Tag, 
-  ChevronRight,
-  Target
+  ChevronRight, 
+  Target 
 } from "lucide-react";
-import { pentaluxeTheme } from "@/theme";
+import { AdminStatsService } from "@/services/admin/AdminStatsService";
 
 interface ITopSellingProduct {
   _id: {
@@ -59,35 +55,35 @@ const AdminDashboard = () => {
     setFilter(event.target.value);
   };
 
-  const getAdminDashboard = async () => {
-    const res = await api.get(ADMIN_API_ROUTES.DASHBOARD.GET(filter));
-    if (res.status === AppHttpStatusCodes.OK) {
-      const data = res.data.data;
+  const getAdminDashboard = useCallback(async () => {
+    const res = await AdminStatsService.getDashboardStats(filter);
+    if (res.success) {
+      const data = res.data;
       setSalesData(data.sales);
       setTotalSales(data.totalSales);
       setTotalOrders(data.totalOrders);
     }
-  };
+  }, [filter]);
 
-  const getBestSellingProducts = async () => {
-    const res = await api.get(ADMIN_API_ROUTES.DASHBOARD.BEST_SELLING_PRODUCTS);
-    if (res.status === AppHttpStatusCodes.OK) {
-      setProducts(res.data.data);
+  const getBestSellingProducts = useCallback(async () => {
+    const res = await AdminStatsService.getBestSellingProducts();
+    if (res.success) {
+      setProducts(res.data);
     }
-  };
+  }, []);
 
-  const getBestSellingCategory = async () => {
-    const res = await api.get(ADMIN_API_ROUTES.DASHBOARD.BEST_SELLING_CATEGORIES);
-    if (res.status === AppHttpStatusCodes.OK) {
-      setCategories(res.data.data);
+  const getBestSellingCategory = useCallback(async () => {
+    const res = await AdminStatsService.getBestSellingCategories();
+    if (res.success) {
+      setCategories(res.data);
     }
-  };
+  }, []);
 
   useEffect(() => {
     getAdminDashboard();
     getBestSellingProducts();
     getBestSellingCategory();
-  }, [filter]);
+  }, [getAdminDashboard, getBestSellingProducts, getBestSellingCategory]);
 
   return (
     <div className="space-y-8 pb-12">
@@ -168,7 +164,7 @@ const AdminDashboard = () => {
               {QuickActions.map(action => (
                 <Link 
                   key={action.id} 
-                  to={action.path} 
+                  to={action.route} 
                   className="flex flex-col items-center justify-center gap-3 p-4 bg-black/40 border border-white/5 rounded-2xl hover:bg-emerald-500/10 hover:border-emerald-500/30 transition-all group"
                 >
                   <action.icon className="w-5 h-5 text-slate-400 group-hover:text-emerald-500 transition-colors" />

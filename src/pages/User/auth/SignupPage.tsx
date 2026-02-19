@@ -4,10 +4,8 @@ import { useSelector } from "react-redux";
 import { toast } from "sonner";
 import { User, Mail, Lock, Phone, Sparkles, UserPlus, ArrowRight, RefreshCcw, ShieldCheck } from "lucide-react";
 
-import api from "@/services/apiService";
 import GoogleAuth from "@/components/GoogleAuthentication/GoogleAuth";
-import { AppHttpStatusCodes } from "@/types/statusCode";
-import { USER_API_ROUTES } from "@/routes/api/UserApiRoutes";
+import { AuthService } from "@/services/user/AuthService";
 
 const SignupPage = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -41,28 +39,12 @@ const SignupPage = () => {
     }
 
     setIsLoading(true);
-    try {
-      const response = await api.post(USER_API_ROUTES.AUTH.REGISTER, {
-        email,
-        username,
-        password,
-        phone,
-      });
-
-      if (response.status === AppHttpStatusCodes.CREATED) {
-        toast.success("Account created. Please verify your email.");
-        navigate(`/otp-verify/${email}`);
-      }
-    } catch (error: unknown) {
-      if (error && typeof error === 'object' && 'response' in error) {
-        const axiosError = error as { response: { data: { message: string } } };
-        toast.error(axiosError.response?.data.message || "Registration failed");
-      } else {
-        toast.error("Registration failed");
-      }
-    } finally {
-      setIsLoading(false);
+    const res = await AuthService.register({ email, username, password, phone });
+    
+    if (res.success) {
+      navigate(`/otp-verify/${email}`);
     }
+    setIsLoading(false);
   };
 
   return (

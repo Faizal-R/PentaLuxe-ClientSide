@@ -1,9 +1,5 @@
-import { Heart, MoveRight, Trash2, ShoppingBag, Tag, Truck, ShieldCheck, Minus, Plus, RefreshCcw } from "lucide-react";
+import { MoveRight, Trash2, ShoppingBag, Tag, Truck, ShieldCheck, Minus, Plus, RefreshCcw } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import api from "@/services/apiService";
-import { AppHttpStatusCodes } from "@/types/statusCode";
-import { AxiosError } from "axios";
-import { toast } from "sonner";
 import EmptyCart from "@/components/EmptyCart";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -14,8 +10,10 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 import { Cart } from "@/types/cartProductTypes";
 import { ICoupon } from "@/pages/Admin/managements/AdminCouponManagementPage";
-import { USER_API_ROUTES } from "@/routes/api/UserApiRoutes";
 import { pentaluxeTheme } from "@/theme";
+import { CartService } from "@/services/user/CartService";
+import { CheckoutService } from "@/services/user/CheckoutService";
+import { infoToast } from "@/utils/customToast";
 
 const CartPage = () => {
   const navigate = useNavigate();
@@ -36,28 +34,18 @@ const CartPage = () => {
   const selectTagRef = useRef<HTMLSelectElement>(null);
 
   const getCartProducts = useCallback(async () => {
-    try {
-      const res = await api.get(USER_API_ROUTES.CART.GET);
-      if (res.status === AppHttpStatusCodes.OK) {
-        dispatch(setCartProducts(res.data.data || []));
-      }
-    } catch (error) {
-      if (error instanceof AxiosError) {
-        if (error.response?.status === AppHttpStatusCodes.UNAUTHORIZED) navigate("/login");
-        toast.error(error.response?.data.message);
-      }
+    const res = await CartService.getCart();
+    if (res.success) {
+      dispatch(setCartProducts(res.data || []));
     }
-  }, [dispatch, navigate]);
+  }, [dispatch]);
 
   const getAllCoupons = useCallback(async () => {
-    try {
-      const res = await api.get(USER_API_ROUTES.COUPONS.GET);
-      if (res.status === AppHttpStatusCodes.OK) {
-        const { data: fetchResult } = res.data;
-        const validCoupons = fetchResult.filter((c: { expiryDate: string | null }) => c.expiryDate !== null);
-        setCoupons(validCoupons);
-      }
-    } catch (error) {}
+    const res = await CheckoutService.getCoupons();
+    if (res.success) {
+      const validCoupons = res.data.filter((c: { expiryDate: string | null }) => c.expiryDate !== null);
+      setCoupons(validCoupons);
+    }
   }, []);
 
   useEffect(() => {
@@ -67,27 +55,17 @@ const CartPage = () => {
 
   const handleChangeQuantity = async (itemId: string, action: string, stock: number) => {
     setIsUpdating(itemId);
-    try {
-      const res = await api.patch(USER_API_ROUTES.CART.PATCH, { itemId, action, stock });
-      if (res.status === AppHttpStatusCodes.OK) {
-        dispatch(changeQuantity({ id: itemId, action, stock }));
-      }
-    } catch (error) {
-      if (error instanceof AxiosError) toast.error(error.response?.data.message);
-    } finally {
-      setIsUpdating(null);
+    const res = await CartService.updateQuantity(itemId, action, stock);
+    if (res.success) {
+      dispatch(changeQuantity({ id: itemId, action, stock }));
     }
+    setIsUpdating(null);
   };
 
   const handleProductRemove = async (productId: string) => {
-    try {
-      const res = await api.delete(USER_API_ROUTES.CART.REMOVE_PRODUCT(productId));
-      if (res.status === AppHttpStatusCodes.OK) {
-        dispatch(removeProduct(productId));
-        toast.success("Removed from Shopping Cart");
-      }
-    } catch (error) {
-      if (error instanceof AxiosError) toast.error(error.response?.data.message);
+    const res = await CartService.removeFromCart(productId);
+    if (res.success) {
+      dispatch(removeProduct(productId));
     }
   };
 
@@ -124,7 +102,7 @@ const CartPage = () => {
 
   const toggleCouponDiscount = () => {
     if (!selectedRate && !toggleButton) {
-      toast.info("Select a preservation code");
+      infoToast("Select a preservation code");
       selectTagRef.current?.focus();
       return;
     }
@@ -137,12 +115,10 @@ const CartPage = () => {
   };
 
   const handleProceedToCheckout = async () => {
-    try {
-      const res = await api.patch(USER_API_ROUTES.CART.CART_TOTAL, { totalPrice });
-      if (res.status === AppHttpStatusCodes.OK) {
-        navigate("/checkout", { state: { totalPrice, discountAmount, selectedCoupon } });
-      }
-    } catch (err) {}
+    const res = await CartService.setCartTotal(totalPrice);
+    if (res.success) {
+      navigate("/checkout", { state: { totalPrice, discountAmount, selectedCoupon } });
+    }
   };
 
   if (!products.length) return <EmptyCart />;
@@ -363,3 +339,4 @@ const ChevronDown = ({ className }: { className?: string }) => (
 );
 
 export default CartPage;
+

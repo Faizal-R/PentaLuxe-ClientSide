@@ -1,0 +1,24 @@
+/* Success Toast */
+.custom-success-toast,
+.custom-error-toast {
+  font-size: 14.5px !important;
+  color: white !important;
+  border-radius: 10px;
+  padding: 16px !important;
+  min-height: 60px !important;
+  max-width: 400px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  white-space: normal;  
+  overflow-wrap: break-word;  
+  word-break: break-word;
+}
+.custom-success-toast {
+  background: linear-gradient(to top left, black, black, #166534) !important; /* green */
+  border-color: rgba(22, 101, 52, 0.5) !important;
+}
+
+/* Error Toast */
+.custom-error-toast {
+  background: linear-gradient(to top left, black, black, #8e0002) !important; /* red */
+  border-color: rgba(138, 0, 0, 0.5) !important;
+}

@@ -1,12 +1,8 @@
-import { useEffect, useState } from "react";
-import api from "../services/apiService";
-import { AppHttpStatusCodes } from "../types/statusCode";
-import { AxiosError } from "axios";
+import { useEffect, useState, useCallback } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useDispatch } from "react-redux";
 import { logOut } from "@/store/slices/userSlice";
-import { USER_API_ROUTES } from "@/routes/api/UserApiRoutes";
 import { pentaluxeTheme } from "@/theme";
 import { 
   User, 
@@ -18,6 +14,7 @@ import {
   Sparkles,
   ChevronRight
 } from "lucide-react";
+import { ProfileService } from "@/services/user/ProfileService";
 
 interface IUser {
   username: string;
@@ -65,21 +62,18 @@ const UserProfileLayout = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<IUser | null>(null);
 
-  const getUserProfile = async () => {
-    try {
-      const res = await api.get(USER_API_ROUTES.PROFILE.GET);
-      if (res.status === AppHttpStatusCodes.OK) setUser(res.data.data);
-    } catch (error) {
-      if (error instanceof AxiosError) {
-        if (error.response?.status === AppHttpStatusCodes.NOT_FOUND) toast.error(error.response?.data.message);
-        if (error.response?.status === AppHttpStatusCodes.UNAUTHORIZED) navigate("/login");
-      }
+  const getUserProfile = useCallback(async () => {
+    const res = await ProfileService.getProfile();
+    if (res.success) {
+      setUser(res.data);
+    } else if (res.status === 401) {
+      navigate("/login");
     }
-  };
+  }, [navigate]);
 
   useEffect(() => {
     getUserProfile();
-  }, []);
+  }, [getUserProfile]);
 
   const handleLinkClick = (link: typeof sideBarLinks[0]) => {
     if (link.action === 'logout') {

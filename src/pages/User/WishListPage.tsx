@@ -1,18 +1,15 @@
 import { useCallback, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
-import { toast } from "sonner";
-import { AxiosError } from "axios";
 import { Trash2, ShoppingBag, Eye, Heart, MoveRight } from "lucide-react";
 
 import EmptyWishlist from "@/components/EmptyWishlist";
 import ProductModal from "@/components/ProductDetailsModal";
-import { USER_API_ROUTES } from "@/routes/api/UserApiRoutes";
-import api from "@/services/apiService";
 import { addToCart } from "@/store/slices/cartSlice";
 import { IProduct } from "@/types/productTypes";
-import { AppHttpStatusCodes } from "@/types/statusCode";
 import { pentaluxeTheme } from "@/theme";
+import { WishlistService } from "@/services/user/WishlistService";
+import { CartService } from "@/services/user/CartService";
 
 interface IWishlistItems {
   _id: string;
@@ -35,16 +32,11 @@ const WishlistPage = () => {
 
   const getUserWishlist = useCallback(async () => {
     setIsLoading(true);
-    try {
-      const res = await api.get(USER_API_ROUTES.WISHLIST.GET);
-      if (res.status === AppHttpStatusCodes.OK) {
-        setWishlistItems(res.data.data || []);
-      }
-    } catch (err) {
-      console.error("Wishlist fetch failed");
-    } finally {
-      setIsLoading(false);
+    const res = await WishlistService.getWishlist();
+    if (res.success) {
+      setWishlistItems(res.data || []);
     }
+    setIsLoading(false);
   }, []);
 
   useEffect(() => {
@@ -57,32 +49,25 @@ const WishlistPage = () => {
     setModalOpen(true);
   };
 
-  const handleAddToCart = async (productId: string, volume: string, stock: number) => {
-    try {
-      const res = await api.post(USER_API_ROUTES.CART.ADD_TO_CART, {
-        productId,
-        volume,
-        stock,
-      });
-      if (res.status === AppHttpStatusCodes.OK) {
-        setModalOpen(false);
-        toast.success("Added to Shopping Cart");
-        dispatch(addToCart(res.data.data));
-        navigate("/cart");
-      }
-    } catch (error) {
-      if (error instanceof AxiosError) toast.error(error.response?.data.message);
+  const handleAddToCart = async (productId: string, volume: string) => {
+    const res = await CartService.addToCart({
+      productId,
+      quantity: 1, // Default to 1
+      size: volume, // Using volume as size if compatible
+    });
+
+    if (res.success) {
+      setModalOpen(false);
+      dispatch(addToCart(res.data));
+      navigate("/cart");
     }
   };
 
   const removeFromWishlist = async (productId: string) => {
-    try {
-      const res = await api.delete(USER_API_ROUTES.WISHLIST.REMOVE_FROM_WISHLIST(productId));
-      if (res.status === AppHttpStatusCodes.OK) {
-        toast.success("Removed from Wishlist");
-        setWishlistItems(prev => prev.filter(item => item.product._id !== productId));
-      }
-    } catch (error) {}
+    const res = await WishlistService.removeFromWishlist(productId);
+    if (res.success) {
+      setWishlistItems(prev => prev.filter(item => item.product._id !== productId));
+    }
   };
 
   if (isLoading) return <div className="min-h-screen bg-[#05070a]" />;
@@ -114,7 +99,7 @@ const WishlistPage = () => {
                 key={item._id}
                 className="group relative bg-[#0c1110]/80 backdrop-blur-3xl border border-emerald-500/10 hover:border-emerald-500/40 transition-all duration-700 overflow-hidden flex flex-col hover:-translate-y-2"
                 style={{ 
-                  borderRadius: "10px", // Industrial Sharp Corners
+                  borderRadius: "10px", 
                   boxShadow: "0 20px 40px rgba(0,0,0,0.6)"
                 }}
               >
@@ -251,3 +236,4 @@ const WishlistPage = () => {
 };
 
 export default WishlistPage;
+

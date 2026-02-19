@@ -1,12 +1,9 @@
 
 import CouponModal from "@/components/ui/modal/CouponModal";
 import Pagination from "@/components/Pagination";
-import api from "@/services/apiService";
-import { AppHttpStatusCodes } from "@/types/statusCode";
-import { AxiosError } from "axios";
 import React, { useEffect, useState } from "react";
-import { toast } from "sonner";
-import { ADMIN_API_ROUTES } from "@/routes/api/AdminApiRoutes";
+import { AdminCouponService } from "@/services/admin/AdminCouponService";
+import { successToast } from "@/utils/customToast";
 import { 
   Ticket, 
   Trash2, 
@@ -14,10 +11,8 @@ import {
   Calendar, 
   Zap, 
   ShoppingBag, 
-  ChevronRight,
   ShieldCheck
 } from "lucide-react";
-import { pentaluxeTheme } from "@/theme";
 
 export interface ICoupon {
   _id?: string;
@@ -34,38 +29,27 @@ const CouponManagement: React.FC = () => {
   const [displayCoupons, setDispalyCoupons] = useState<ICoupon[]>([]);
 
   const removeCoupon = async (couponId: string) => {
-    try {
-      const res = await api.delete(ADMIN_API_ROUTES.COUPONS_MANAGEMENT.REMOVE(couponId));
-      if (res.status === AppHttpStatusCodes.OK) {
-        toast.success("Voucher purged from registry.");
-        setCoupons(coupons.filter((c) => c._id !== couponId));
-      }
-    } catch (error) {
-      if (error instanceof AxiosError) toast.error(error.response?.data.message || "Integrity error: Removal failed.");
+    const res = await AdminCouponService.deleteCoupon(couponId);
+    if (res.success) {
+      successToast("Voucher purged from registry.");
+      setCoupons(coupons.filter((c) => c._id !== couponId));
     }
   };
 
   const CreateCouponEntry = async (couponData: ICoupon) => {
-    try {
-      const { data: { data: coupon } } = await api.post(ADMIN_API_ROUTES.COUPONS_MANAGEMENT.CREATE, { couponData });
+    const res = await AdminCouponService.createCoupon(couponData);
+    if (res.success) {
+      const coupon = res.data;
       setModalStatus(false);
-      if (coupon) {
-        setCoupons((prev) => [...prev, coupon]);
-        toast.success("Voucher protocol established.");
-      }
-    } catch (error) {
-      if (error instanceof AxiosError) toast.error(error.response?.data.message);
+      setCoupons((prev) => [...prev, coupon]);
+      successToast("Voucher protocol established.");
     }
   };
 
   const getAllCoupons = async () => {
-    try {
-      const res = await api.get(ADMIN_API_ROUTES.COUPONS_MANAGEMENT.GET);
-      if (res.status === AppHttpStatusCodes.OK) {
-        setCoupons(res.data.data);
-      }
-    } catch (error) {
-      console.error(error);
+    const res = await AdminCouponService.getAllCoupons();
+    if (res.success) {
+      setCoupons(res.data);
     }
   };
 

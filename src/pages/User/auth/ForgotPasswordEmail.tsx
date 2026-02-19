@@ -1,28 +1,17 @@
-import api from "@/services/apiService";
-import { AppHttpStatusCodes } from "@/types/statusCode";
-import { AxiosError } from "axios";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { AuthService } from "@/services/user/AuthService";
 
 const ForgotPasswordEmail = () => {
   const [email, setEmail] = useState("");
-  const [message, setMessage] = useState("");
   const navigate = useNavigate();
 
   const SendOtp = async () => {
-    try {
-      const res = await api.post("/api/user/send-rest-otp", { email });
-
-      if (res.status === AppHttpStatusCodes.OK) {
-        setMessage(res.data.message);
-        setTimeout(() => {
-          navigate("/forgot-password/otp", { state: { email } });
-        }, 1500);
-      }
-    } catch (error) {
-      if (error instanceof AxiosError) {
-        setMessage(error.response?.data.message || "Something went wrong");
-      }
+    const res = await AuthService.sendResetOtp(email);
+    if (res.success) {
+      setTimeout(() => {
+        navigate("/forgot-password/otp", { state: { email } });
+      }, 1500);
     }
   };
 
@@ -77,18 +66,6 @@ const ForgotPasswordEmail = () => {
           >
             Send Reset OTP
           </button>
-
-          {message && (
-            <p
-              className={`mt-4 text-center text-sm ${
-                message.toLowerCase().includes("otp")
-                  ? "text-green-600"
-                  : "text-red-600"
-              }`}
-            >
-              {message}
-            </p>
-          )}
 
         </div>
       </div>

@@ -61,5 +61,6 @@ export const USER_API_ROUTES = {
     WALLET_PAYMENT: "/user/wallet-payment",
     CREATE_RAZORPAY_ORDER: "/user/create-razorpay-order",
     RETRY_PAYMENT: "/user/order-retry-payment",
+    GET_RAZORPAY_KEY: "/user/getkey",
   },
 };

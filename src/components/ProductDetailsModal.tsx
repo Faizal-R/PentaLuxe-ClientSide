@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { IProduct } from "@/types/productTypes";
 import { X, Sparkles, ShoppingBag } from "lucide-react";
-import { pentaluxeTheme } from "@/theme";
 
 interface ProductModalProps {
   product: IProduct | null;
   onClose: () => void;
   selectedVolume: string;
-  hanldeCart: (productId: string, volume: string, stock: number) => void;
+  hanldeCart: (productId: string, volume: string) => void;
 }
 
 const ProductModal: React.FC<ProductModalProps> = ({ product, onClose, selectedVolume, hanldeCart }) => {
@@ -28,7 +27,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose, selectedV
   }, [product, selectedSize]);
 
   const handleSendCartData = () => {
-    product && hanldeCart(product?._id, selectedSize, selectProductStock);
+    if (product) hanldeCart(product._id, selectedSize);
   };
 
   if (!product) return null;

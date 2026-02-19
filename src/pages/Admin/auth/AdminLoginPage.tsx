@@ -2,11 +2,7 @@ import { useState } from "react";
 import InputBox from "@/components/InputBox";
 import Button from "@/components/Button/Button";
 import { useNavigate } from "react-router-dom";
-import api from "@/services/apiService";
-import { AxiosError } from "axios";
-import { toast } from "sonner";
-import { AppHttpStatusCodes } from "@/types/statusCode";
-import { ADMIN_API_ROUTES } from "@/routes/api/AdminApiRoutes";
+import { AdminAuthService } from "@/services/admin/AdminAuthService";
 
 const AdminLoginPage = () => {
   const [email, setEmail] = useState("");
@@ -14,18 +10,10 @@ const AdminLoginPage = () => {
   const navigate = useNavigate();
 
   const AdminLoginHandler = async () => {
-    try {
-      const response = await api.post(ADMIN_API_ROUTES.AUTH.LOGIN, { email, password });
-      if (response.status === AppHttpStatusCodes.OK) {
-        localStorage.setItem("adminToken", response.data.token);
-        toast.success("Admin Logged In Successfully");
-        navigate("/admin/dashboard");
-      }
-    } catch (error) {
-      if (error instanceof AxiosError)
-        toast.error(
-          error.response?.data.message || "Something Went Wrong"
-        );
+    const res = await AdminAuthService.login({ email, password });
+    if (res.success || res.token) {
+      localStorage.setItem("adminToken", res.token);
+      navigate("/admin/dashboard");
     }
   };
 

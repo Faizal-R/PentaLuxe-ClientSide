@@ -1,10 +1,5 @@
-
 import React, { ChangeEvent, useEffect, useState } from "react";
 import Modal from "react-modal";
-import api from "@/services/apiService";
-import { AxiosError } from "axios";
-import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
 import DeleteModal from "@/components/ui/modal/DeleteModal";
 import { 
   Plus, 
@@ -16,9 +11,9 @@ import {
   ChevronRight
 } from "lucide-react";
 import Pagination from "@/components/Pagination";
-import { AppHttpStatusCodes } from "@/types/statusCode";
 import { PulseLoader } from "react-spinners";
-import { ADMIN_API_ROUTES } from "@/routes/api/AdminApiRoutes";
+import { AdminCategoryService } from "@/services/admin/AdminCategoryService";
+import { errorToast } from "@/utils/customToast";
 
 export interface ICategories {
   _id: string;
@@ -30,7 +25,6 @@ const AdminCategoryPage = () => {
   const [paginatedCategories, setPaginatedCategories] = useState<ICategories[]>([]);
   const [loading, setLoading] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
-  const navigate = useNavigate();
   const [refresh, setRefresh] = useState(false);
   const [isModal, setIsModal] = useState(false);
   const [selectedId, setSelectedId] = useState("");
@@ -55,33 +49,26 @@ const AdminCategoryPage = () => {
 
   const onCategoryAdd = async () => {
     if (!categoryImage || categoryName.trim() === "") {
-      toast.error("Integrity error: Classification data missing.");
+      errorToast("Integrity error: Classification data missing.");
       return;
     }
 
-    try {
-      const formData = new FormData();
-      formData.append("categoryImage", categoryImage);
-      formData.append("categoryName", categoryName);
-      setLoading(true);
-      const response = await api.post(ADMIN_API_ROUTES.CATEGORIES_MANAGEMENT.UPLOAD_CATEGORY, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      if (response.data.success) {
-        setRefresh((prev) => !prev);
-        toast.success("Classification protocol established.");
-        isModelClose();
-      }
-    } catch (error) {
-      if (error instanceof AxiosError) toast.error(error.response?.data.message);
-    } finally {
-      setLoading(false);
+    const formData = new FormData();
+    formData.append("categoryImage", categoryImage);
+    formData.append("categoryName", categoryName);
+    
+    setLoading(true);
+    const res = await AdminCategoryService.addCategory(formData);
+    if (res.success) {
+      setRefresh((prev) => !prev);
+      isModelClose();
     }
+    setLoading(false);
   };
 
   const onCategoryEdit = async () => {
     if (categoryName.trim() === "") {
-      toast.error("ID required: Classification name missing.");
+      errorToast("ID required: Classification name missing.");
       return;
     }
     const formData = new FormData();
@@ -90,21 +77,13 @@ const AdminCategoryPage = () => {
     if (categoryImage) formData.append("categoryImage", categoryImage);
     else formData.append("ExistingImage", selectedCategoryImage);
 
-    try {
-      setLoading(true);
-      const res = await api.put(ADMIN_API_ROUTES.CATEGORIES_MANAGEMENT.EDIT_CATEGORY, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      if (res.status === AppHttpStatusCodes.OK) {
-        setRefresh(prev => !prev);
-        toast.success("Classification updated.");
-        isModelClose();
-      }
-    } catch (error) {
-      if (error instanceof AxiosError) toast.error(error.response?.data.message);
-    } finally {
-      setLoading(false);
+    setLoading(true);
+    const res = await AdminCategoryService.updateCategory(formData);
+    if (res.success) {
+      setRefresh(prev => !prev);
+      isModelClose();
     }
+    setLoading(false);
   };
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -116,28 +95,19 @@ const AdminCategoryPage = () => {
   };
 
   const onDeleteCategory = async (categoryId: string) => {
-    try {
-      const response = await api.delete(ADMIN_API_ROUTES.CATEGORIES_MANAGEMENT.DELETE_CATEGORY(categoryId));
-      if (response.data.success) {
-        toast.success("Classification purged.");
-        setRefresh((prev) => !prev);
-      }
-    } catch (error) {
-      if (error instanceof AxiosError) toast.error(error.response?.data.message);
+    const res = await AdminCategoryService.deleteCategory(categoryId);
+    if (res.success) {
+      setRefresh((prev) => !prev);
     }
   };
 
   const getCategories = React.useCallback(async () => {
-    try {
-      const response = await api.get(ADMIN_API_ROUTES.CATEGORIES_MANAGEMENT.GET);
-      if (response.data.success) {
-        setCategories(response.data.data);
-        setPaginatedCategories(response.data.data.slice(0, 5));
-      }
-    } catch (error) {
-      if (error instanceof AxiosError && error.response?.status === 403) navigate("/admin");
+    const res = await AdminCategoryService.getAllCategories();
+    if (res.success) {
+      setCategories(res.data);
+      setPaginatedCategories(res.data.slice(0, 5));
     }
-  }, [navigate]);
+  }, []);
 
   const OpenEditCategoryModal = (id: string) => {
     const category = categories.find((c) => id === c._id);

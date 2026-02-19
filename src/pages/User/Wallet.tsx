@@ -1,11 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
-import api from "@/services/apiService";
-import { AppHttpStatusCodes } from "@/types/statusCode";
-import { Wallet, ArrowUpRight, ArrowDownLeft, Activity, ShieldCheck, Sparkles, RefreshCcw } from "lucide-react";
+import { ArrowUpRight, ArrowDownLeft, Activity, ShieldCheck, Sparkles, RefreshCcw } from "lucide-react";
 import Pagination from "@/components/Pagination";
-import { USER_API_ROUTES } from "@/routes/api/UserApiRoutes";
-import { pentaluxeTheme } from "@/theme";
-import { toast } from "sonner";
+import { WalletService } from "@/services/user/WalletService";
 
 interface ITransactions {
   orderID: string;
@@ -23,17 +19,12 @@ const WalletPage = () => {
 
   const fetchWalletData = useCallback(async () => {
     setLoading(true);
-    try {
-      const res = await api.get(USER_API_ROUTES.WALLET.GET);
-      if (res.status === AppHttpStatusCodes.OK) {
-        setTransactions(res.data.data.transactions || []);
-        setBalance(res.data.data.balance || 0);
-      }
-    } catch (err) {
-      toast.error("Failed to load wallet balance");
-    } finally {
-      setLoading(false);
+    const res = await WalletService.getWallet();
+    if (res.success) {
+      setTransactions(res.data.transactions || []);
+      setBalance(res.data.balance || 0);
     }
+    setLoading(false);
   }, []);
 
   useEffect(() => {
@@ -170,3 +161,4 @@ const WalletPage = () => {
 };
 
 export default WalletPage;
+

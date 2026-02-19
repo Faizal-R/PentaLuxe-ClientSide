@@ -2,15 +2,11 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "sonner";
-import { AxiosError } from "axios";
 import { ShieldCheck, Mail, Lock, Sparkles, LogIn as LoginIcon, ArrowRight, RefreshCcw } from "lucide-react";
 
-import api from "@/services/apiService";
 import GoogleAuth from "@/components/GoogleAuthentication/GoogleAuth";
-import { AppHttpStatusCodes } from "@/types/statusCode";
 import { LogIn } from "@/store/slices/userSlice";
-import { USER_API_ROUTES } from "@/routes/api/UserApiRoutes";
-import { pentaluxeTheme } from "@/theme";
+import { AuthService } from "@/services/user/AuthService";
 
 const LoginPage = () => {
   const dispatch = useDispatch();
@@ -18,7 +14,7 @@ const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const user = useSelector((state: { user: { user: any } }) => state.user.user);
+  const user = useSelector((state: { user: { user: { email: string } } }) => state.user.user);
 
   useEffect(() => {
     if (user) navigate("/");
@@ -31,20 +27,15 @@ const LoginPage = () => {
     }
 
     setIsLoading(true);
-    try {
-      const res = await api.post(USER_API_ROUTES.AUTH.LOGIN, { email, password });
-      if (res.status === AppHttpStatusCodes.OK) {
-        const { data } = res.data;
-        dispatch(LogIn());
-        localStorage.setItem("accessToken", data.accessToken);
-        toast.success("Login successful. Welcome back!");
-        navigate("/");
-      }
-    } catch (error) {
-      if (error instanceof AxiosError) toast.error(error.response?.data.message || "Authorization failed");
-    } finally {
-      setIsLoading(false);
+    const res = await AuthService.login({ email, password });
+    
+    if (res.success) {
+      const { data } = res;
+      dispatch(LogIn());
+      localStorage.setItem("accessToken", data.accessToken);
+      navigate("/");
     }
+    setIsLoading(false);
   };
 
   return (
