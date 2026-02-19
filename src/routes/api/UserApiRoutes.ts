@@ -47,7 +47,7 @@ export const USER_API_ROUTES = {
     REGISTER: "/user/register",
     VERIFY_OTP: "/user/otp-verify",
     RESEND_OTP: "/user/resend-otp",
-    GOOGLE_AUTH:"/user/google-auth"
+    GOOGLE_AUTH: "/user/google-auth",
   },
   COUPONS: {
     GET: "/user/coupons",

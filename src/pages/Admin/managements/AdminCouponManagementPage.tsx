@@ -1,15 +1,23 @@
+
 import CouponModal from "@/components/ui/modal/CouponModal";
 import Pagination from "@/components/Pagination";
-
 import api from "@/services/apiService";
 import { AppHttpStatusCodes } from "@/types/statusCode";
-// import { AppHttpStatusCodes } from '@/types/statusCode';
-
 import { AxiosError } from "axios";
-
 import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { ADMIN_API_ROUTES } from "@/routes/api/AdminApiRoutes";
+import { 
+  Ticket, 
+  Trash2, 
+  Plus, 
+  Calendar, 
+  Zap, 
+  ShoppingBag, 
+  ChevronRight,
+  ShieldCheck
+} from "lucide-react";
+import { pentaluxeTheme } from "@/theme";
 
 export interface ICoupon {
   _id?: string;
@@ -25,167 +33,153 @@ const CouponManagement: React.FC = () => {
   const [coupons, setCoupons] = useState<ICoupon[]>([]);
   const [displayCoupons, setDispalyCoupons] = useState<ICoupon[]>([]);
 
-  // Function to remove a coupon
   const removeCoupon = async (couponId: string) => {
     try {
-      const res = await api.delete(
-        ADMIN_API_ROUTES.COUPONS_MANAGEMENT.REMOVE(couponId),
-      );
+      const res = await api.delete(ADMIN_API_ROUTES.COUPONS_MANAGEMENT.REMOVE(couponId));
       if (res.status === AppHttpStatusCodes.OK) {
-        toast.success(res.data.message);
-        setCoupons(
-          coupons.filter(
-            (coupon) => coupon._id && coupon._id.toString() !== couponId,
-          ),
-        );
+        toast.success("Voucher purged from registry.");
+        setCoupons(coupons.filter((c) => c._id !== couponId));
       }
     } catch (error) {
-      if (error instanceof AxiosError) {
-        toast.error(
-          error.response?.data.message || "Error Occured While Removing Coupon",
-        );
-      }
+      if (error instanceof AxiosError) toast.error(error.response?.data.message || "Integrity error: Removal failed.");
     }
   };
 
   const CreateCouponEntry = async (couponData: ICoupon) => {
     try {
-      const {
-        data: { data: coupon },
-      } = await api.post(ADMIN_API_ROUTES.COUPONS_MANAGEMENT.CREATE, {
-        couponData,
-      });
+      const { data: { data: coupon } } = await api.post(ADMIN_API_ROUTES.COUPONS_MANAGEMENT.CREATE, { couponData });
       setModalStatus(false);
       if (coupon) {
         setCoupons((prev) => [...prev, coupon]);
+        toast.success("Voucher protocol established.");
       }
     } catch (error) {
-      if (error instanceof AxiosError) {
-        toast.error(error.response?.data.message);
-      }
+      if (error instanceof AxiosError) toast.error(error.response?.data.message);
     }
   };
 
   const getAllCoupons = async () => {
-    const res = await api.get(ADMIN_API_ROUTES.COUPONS_MANAGEMENT.GET);
-    if (res.status === AppHttpStatusCodes.OK) {
-      setCoupons(res.data.data);
-      console.log(res.data.data);
+    try {
+      const res = await api.get(ADMIN_API_ROUTES.COUPONS_MANAGEMENT.GET);
+      if (res.status === AppHttpStatusCodes.OK) {
+        setCoupons(res.data.data);
+      }
+    } catch (error) {
+      console.error(error);
     }
   };
 
-  const handlePagination = (items: ICoupon[]) => {
-    setDispalyCoupons(items);
-  };
+  const handlePagination = (items: ICoupon[]) => setDispalyCoupons(items);
 
   useEffect(() => {
     getAllCoupons();
   }, []);
-  return (
-    <div className="p-8 text-black h-screen">
-      <h2 className="text-4xl font-semibold mb-6">Coupon Management</h2>
 
-      <button
-        onClick={() => setModalStatus(true)}
-        className="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600"
-      >
-        Create New Coupon
-      </button>
+  return (
+    <div className="space-y-8 pb-12">
+      {/* Header Area */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-emerald-500/10 pb-8">
+        <div className="space-y-1">
+          <div className="flex items-center gap-3">
+             <div className="w-8 h-[1px] bg-emerald-500" />
+             <span className="text-emerald-500 tracking-[0.4em] uppercase text-[9px] font-bold">Incentive Engine</span>
+          </div>
+          <h1 className="text-4xl md:text-5xl font-serif text-white tracking-tighter">Voucher Archive</h1>
+        </div>
+
+        <button
+          onClick={() => setModalStatus(true)}
+          className="flex items-center gap-3 px-8 py-4 bg-emerald-500 text-black text-[11px] font-bold uppercase tracking-widest rounded-2xl hover:bg-emerald-400 hover:shadow-[0_0_30px_rgba(16,185,129,0.3)] transition-all active:scale-95"
+        >
+          <Plus size={16} />
+          <span>Initialize Voucher</span>
+        </button>
+      </div>
+
       <CouponModal
         isModalOpen={modalStatus}
         setIsModalOpen={setModalStatus}
         handleCouponData={CreateCouponEntry}
       />
 
-      <div className="h-[80%] overflow-x-auto mt-5 border border-gray-300 rounded-lg shadow-lg">
-        <table className="min-w-full bg-white text-center">
-          <thead className="bg-gradient-to-r from-indigo-600 to-blue-500 text-white">
-            <tr>
-              <th className="px-6 py-3 font-semibold">Coupon Name</th>
-              <th className="px-6 py-3 font-semibold">Discount Percentage</th>
-              <th className="px-6 py-3 font-semibold">Max Discount Price</th>
-              <th className="px-6 py-3 font-semibold">
-                Minimum Purchase Price
-              </th>
-              <th className="px-6 py-3 font-semibold">Expiry Date</th>
-              <th className="px-6 py-3 font-semibold">Actions</th>
+      {/* Vouchers Grid */}
+      <div className="bg-white/5 backdrop-blur-3xl border border-white/5 rounded-[40px] overflow-hidden shadow-2xl">
+        <table className="w-full">
+          <thead>
+            <tr className="bg-white/[0.02] border-b border-white/5">
+              <th className="px-8 py-5 text-left text-[9px] font-bold text-emerald-500/60 uppercase tracking-[0.3em]">Code Token</th>
+              <th className="px-8 py-5 text-left text-[9px] font-bold text-emerald-500/60 uppercase tracking-[0.3em]">Discount</th>
+              <th className="px-8 py-5 text-left text-[9px] font-bold text-emerald-500/60 uppercase tracking-[0.3em]">Threshold</th>
+              <th className="px-8 py-5 text-left text-[9px] font-bold text-emerald-500/60 uppercase tracking-[0.3em]">Lifecycle</th>
+              <th className="px-8 py-5 text-right text-[9px] font-bold text-emerald-500/60 uppercase tracking-[0.3em]">Registry Control</th>
             </tr>
           </thead>
-          <tbody>
-            {coupons.length > 0 ? (
-              (displayCoupons.length > 0 ? displayCoupons : coupons).map(
-                (coupon, index) => (
-                  <tr
-                    key={coupon._id}
-                    className={`border-b ${
-                      index % 2 === 0 ? "bg-gray-100" : "bg-white"
-                    } transition duration-300 ease-in-out hover:bg-gray-200`}
-                  >
-                    <td className="px-6 py-4 text-gray-800 font-medium">
-                      {coupon.couponName}
-                    </td>
-                    <td className="px-6 py-4 text-teal-600">
-                      {coupon.discountPercentage}%
-                    </td>
-                    <td className="px-6 py-4 text-green-600">
-                      ₹{coupon.maxDiscountPrice}
-                    </td>
-                    <td className="px-6 py-4 text-gray-600">
-                      ₹{coupon.minimumPurchasePrice}
-                    </td>
-                    <td className="px-6 py-4 text-gray-600">
-                      {coupon.expiryDate ? (
-                        new Date(coupon.expiryDate).toLocaleDateString(
-                          "en-US",
-                          {
-                            year: "numeric",
-                            month: "long",
-                            day: "numeric",
-                          },
-                        )
-                      ) : (
-                        <span className="text-red-500">Coupon Exipired</span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4">
-                      <button
-                        className="flex items-center bg-gradient-to-r from-red-500 to-pink-500 text-white py-2 px-4 rounded-full shadow-lg hover:shadow-2xl transition duration-200 transform hover:scale-105"
-                        onClick={() => removeCoupon(coupon._id ?? "")}
-                      >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-5 w-5 mr-2"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1H9a1 1 0 00-1 1v3m7 0H8"
-                          />
-                        </svg>
-                        Remove
-                      </button>
-                    </td>
-                  </tr>
-                ),
-              )
-            ) : (
-              <tr>
-                <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
-                  No Coupons Available
+          <tbody className="divide-y divide-white/[0.03]">
+            {(displayCoupons.length > 0 ? displayCoupons : coupons).map((coupon) => (
+              <tr key={coupon._id} className="group hover:bg-emerald-500/[0.02] transition-all duration-500">
+                <td className="px-8 py-6">
+                   <div className="flex items-center gap-3">
+                      <Ticket size={14} className="text-emerald-500/40" />
+                      <span className="text-[13px] font-bold text-white uppercase tracking-[0.2em]">{coupon.couponName}</span>
+                   </div>
+                </td>
+                <td className="px-8 py-6">
+                   <div className="space-y-0.5">
+                      <div className="flex items-center gap-2">
+                         <span className="text-xl font-serif text-emerald-500 tracking-tighter">{coupon.discountPercentage}%</span>
+                         <Zap size={10} className="text-emerald-500/40" />
+                      </div>
+                      <p className="text-[9px] uppercase tracking-widest text-slate-500 font-bold">Max ₹{coupon.maxDiscountPrice} Off</p>
+                   </div>
+                </td>
+                <td className="px-8 py-6 text-slate-400 group-hover:text-white transition-colors">
+                   <div className="flex items-center gap-2">
+                      <ShoppingBag size={12} className="text-emerald-500/40" />
+                      <span className="text-[11px] font-mono tracking-widest">MIN: ₹{coupon.minimumPurchasePrice}</span>
+                   </div>
+                </td>
+                <td className="px-8 py-6">
+                   <div className="flex items-center gap-2 overflow-hidden">
+                      <Calendar size={12} className="text-emerald-500/40" />
+                      <span className="text-[10px] uppercase tracking-widest font-bold text-slate-500">
+                        {coupon.expiryDate ? new Date(coupon.expiryDate).toLocaleDateString("en-US", {
+                          year: "numeric", month: "short", day: "numeric"
+                        }) : "Exhausted"}
+                      </span>
+                   </div>
+                </td>
+                <td className="px-8 py-6 text-right">
+                   <button
+                     onClick={() => removeCoupon(coupon._id ?? "")}
+                     className="p-3 rounded-xl bg-white/5 border border-white/10 text-slate-400 hover:text-red-500 hover:border-red-500/30 transition-all hover:scale-110"
+                   >
+                     <Trash2 size={16} />
+                   </button>
                 </td>
               </tr>
+            ))}
+            {coupons.length === 0 && (
+               <tr>
+                 <td colSpan={5} className="px-8 py-20 text-center">
+                    <div className="space-y-3 opacity-20">
+                       <ShieldCheck size={48} className="mx-auto" />
+                       <p className="text-[11px] uppercase tracking-[0.4em] font-bold">Registry Clear: No Vouchers Active</p>
+                    </div>
+                 </td>
+               </tr>
             )}
           </tbody>
         </table>
-        <Pagination
-          items={coupons}
-          itemsPerPage={5}
-          onPageChange={handlePagination}
-        />
+      </div>
+
+      <div className="flex justify-center pt-8">
+        <div className="bg-white/5 backdrop-blur-3xl border border-white/5 px-6 py-4 rounded-[32px]">
+           <Pagination
+             items={coupons}
+             itemsPerPage={5}
+             onPageChange={handlePagination}
+           />
+        </div>
       </div>
     </div>
   );

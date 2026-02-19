@@ -1,76 +1,70 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import api from "@/services/apiService";
 import ProductCard from "@/components/ProductCard";
 import { IProduct } from "@/types/productTypes";
 import Pagination from "@/components/Pagination";
-import { AlertTriangle } from "lucide-react";
+import { 
+  Search, 
+  ChevronDown, 
+  RefreshCcw,
+  Sparkles,
+  AlertTriangle
+} from "lucide-react";
 import { AxiosError } from "axios";
 import { toast } from "sonner";
 import { USER_API_ROUTES } from "@/routes/api/UserApiRoutes";
+import { pentaluxeTheme } from "@/theme";
 
 const AllProductsPage = () => {
-const [searchedProducts,setSearchedProducts]=useState<IProduct[]>([])
-  // const searchedProducts = useSelector(
-  //   (state:{search:{searchedProducts:IProduct[]}}) => state.search?.searchedProducts || []
-  // );
-
+  const [searchedProducts, setSearchedProducts] = useState<IProduct[]>([]);
   const [products, setProducts] = useState<IProduct[]>([]);
   const [sortedProducts, setSortedProducts] = useState<IProduct[]>([]);
   const [sortOption, setSortOption] = useState("az");
   const [gender, setGender] = useState("");
   const [displayedProducts, setDisplayedProducts] = useState<IProduct[]>([]);
   const [filterActive, setFilterActive] = useState(false);
-  const [input,setInput]=useState('')
+  const [input, setInput] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
+
+  const fetchProducts = useCallback(async () => {
+    try {
+      const response = await api.get(USER_API_ROUTES.PRODUCTS.GET);
+      const { data: fetchResult } = response.data;
+      setProducts(fetchResult);
+      
+      if (searchedProducts.length === 0) {
+        setSortedProducts(fetchResult);
+        setDisplayedProducts(fetchResult);
+      }
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        toast.error(error.response?.data.message || "Failed to fetch products");
+      }
+    }
+  }, [searchedProducts.length]);
 
   useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const response = await api.get(USER_API_ROUTES.PRODUCTS.GET);
-        const { data: products } = response.data;
-        setProducts(products);
-  
-        if (!searchedProducts || searchedProducts.length === 0) {
-          setSortedProducts(products);
-          setDisplayedProducts(products);
-        }
-      } catch (error) {
-        if (error instanceof AxiosError) {
-          toast.error(error.response?.data.message);
-        }
-      }
-    };
-  
-    // Only fetch products if there are no searchedProducts
     if (searchedProducts.length > 0) {
       setSortedProducts(searchedProducts);
       setDisplayedProducts(searchedProducts);
-    } else if (products.length === 0) {
+    } else {
       fetchProducts();
     }
-  }, [searchedProducts]);
-  
+  }, [searchedProducts, fetchProducts]);
 
-  const filterProductsByGender = (gender: string) => {
-    if (!gender) return products;
-    return products.filter((product) => product.Gender === gender);
-  };
+  const filterProductsByGender = useCallback((gender: string, list: IProduct[]) => {
+    if (!gender) return list;
+    return list.filter((product) => product.Gender === gender);
+  }, []);
 
-  const sortProducts = (option: string, filteredProducts: IProduct[]) => {
+  const sortProducts = useCallback((option: string, filteredProducts: IProduct[]) => {
     const sorted = [...filteredProducts];
     switch (option) {
       case "priceLowHigh":
-        sorted.sort((a, b) => {
-          const priceA = a.Variants[0] ? a.Variants[0].price : Infinity;
-          const priceB = b.Variants[0] ? b.Variants[0].price : Infinity;
-          return priceA - priceB;
-        });
+        sorted.sort((a, b) => (a.Variants[0]?.price || 0) - (b.Variants[0]?.price || 0));
         break;
       case "priceHighLow":
-        sorted.sort((a, b) => {
-          const priceA = a.Variants[0] ? a.Variants[0].price : -Infinity;
-          const priceB = b.Variants[0] ? b.Variants[0].price : -Infinity;
-          return priceB - priceA;
-        });
+        sorted.sort((a, b) => (b.Variants[0]?.price || 0) - (a.Variants[0]?.price || 0));
         break;
       case "az":
         sorted.sort((a, b) => a.Name.localeCompare(b.Name));
@@ -78,176 +72,209 @@ const [searchedProducts,setSearchedProducts]=useState<IProduct[]>([])
       case "za":
         sorted.sort((a, b) => b.Name.localeCompare(a.Name));
         break;
-      default:
-        break;
     }
     return sorted;
+  }, []);
+
+  useEffect(() => {
+    const filtered = filterProductsByGender(gender, products);
+    const sorted = sortProducts(sortOption, filtered);
+    setSortedProducts(sorted);
+  }, [products, sortOption, gender, filterProductsByGender, sortProducts]);
+
+  const onSearchHandler = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!input.trim()) return;
+
+    setIsSearching(true);
+    try {
+      const res = await api.post(USER_API_ROUTES.PRODUCTS.SEARCH_BY_CATEGORY, { text: input });
+      if (res.status === 200) {
+        setSearchedProducts(res.data.data);
+        setFilterActive(true);
+      }
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        toast.error(error.response?.data.message || "Search failed");
+      }
+    } finally {
+      setIsSearching(false);
+    }
   };
 
-  const handleSortChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setSortOption(event.target.value);
-    setFilterActive(true);
-  };
-
-  const handleGender = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setGender(event.target.value);
-    setFilterActive(true);
-  };
-
-  const handlePagination = (products: IProduct[]) => {
-    setDisplayedProducts(products);
-  };
-
-  const handleUnfilter = () => {
-    setSortOption("az");
+  const clearAllFilters = () => {
+    setInput("");
+    setSearchedProducts([]);
     setGender("");
+    setSortOption("az");
     setFilterActive(false);
   };
 
-  useEffect(() => {
-    const filteredProducts = filterProductsByGender(gender);
-    const sorted = sortProducts(sortOption, filteredProducts);
-    setSortedProducts(sorted);
-    setDisplayedProducts(sorted);
-  }, [products, sortOption, gender]);
-  
-
-
-  const onSearchHandler = async () => {
-   
-    try {
-      if (input.trim().length > 0) {
-        const res = await api.post(USER_API_ROUTES.PRODUCTS.SEARCH_BY_CATEGORY, {
-          text: input,
-        });
-        if (res.status === 200) {
-          console.log(res.data)
-          setSearchedProducts(res.data.data)
-          setInput("");
-      
-        }
-      }
-    } catch (error) {
-      if(error instanceof  AxiosError){
-        toast.error(error.response?.data.message)
-      }
-    }
-  };
-
-  const clearSearchedProducts = () => {
-    setInput(""); 
-    setSearchedProducts([]); 
-    setGender(""); 
-    setSortOption("az"); 
-    setFilterActive(false); 
-    const sorted = sortProducts("az", products);
-    setSortedProducts(sorted);
-    setDisplayedProducts(sorted); 
-  };
-  
-  
-
   return (
-    <div className="pb-2">
-      <div className="heading text-center">
-        <h1 className="text-4xl text-center font-Quando mt-5">
-          Our Complete Collections
-        </h1>
-        <p className="fot">
-          Discover our wide range of high-quality products, curated to meet all
-          your needs.
-        </p>
-      </div>
-      <div className="filter-sort-container mt-5 text-center flex gap-5 justify-center items-center">
-        <div>
-          <p>Gender:</p>
-          <select
-            className="text-gray-700 w-60 h-10 px-5"
-            id="Gender"
-            value={gender}
-            onChange={handleGender}
-          >
-            <option value="">Select Gender</option>
-            <option value="Men">Men</option>
-            <option value="Women">Women</option>
-            <option value="Unisex">Unisex</option>
-          </select>
+    <div 
+      className="min-h-screen pt-8 pb-16 px-8 font-sans selection:bg-emerald-500 selection:text-black"
+      style={{ backgroundColor: pentaluxeTheme.background, color: pentaluxeTheme.foreground }}
+    >
+      <div className="w-full space-y-10">
+        
+        {/* Header Section */}
+        <div className="flex flex-col md:flex-row justify-between items-end gap-6 border-b border-emerald-500/10 pb-8 px-2">
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+               <div className="w-8 h-px bg-emerald-500 shadow-[0_0_10px_#10b981]" />
+               <span className="text-emerald-500 tracking-[0.4em] uppercase text-[10px] font-bold">The Complete Archives</span>
+            </div>
+            <h1 className="text-4xl md:text-6xl font-serif">Curated <span className="text-emerald-500 italic">Essences.</span></h1>
+            <p className="max-w-2xl text-slate-500 font-light leading-relaxed text-xs md:text-sm">
+               Explore our full decant architecture. From nocturnal wood notes to ephemeral florals, find the sillage that defines your silent presence.
+            </p>
+          </div>
+          
+          <div className="text-right hidden lg:block">
+             <span className="text-[10px] tracking-[0.6em] uppercase text-emerald-500/40 font-bold block mb-2">Inventory Sync</span>
+             <div className="flex items-center gap-2 justify-end">
+                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-xs font-mono text-emerald-500/80">{products.length} Master Decants Online</span>
+             </div>
+          </div>
         </div>
-        <div>
-          <p>Sort By:</p>
-          <select
-            className="text-gray-700 w-60 h-10 px-5"
-            id="sortOptions"
-            value={sortOption}
-            onChange={handleSortChange}
-          >
-            <option value="az">Aa - Zz</option>
-            <option value="za">Zz - Aa</option>
-            <option value="priceLowHigh">Price Low - High</option>
-            <option value="priceHighLow">Price High - Low</option>
-          </select>
+
+        {/* Toolbar Section */}
+        <div className="flex flex-col lg:flex-row gap-6 items-center justify-between bg-emerald-950/5 border border-emerald-500/10 p-6 rounded-sm backdrop-blur-sm sticky top-[80px] z-40">
+           <div className="flex flex-wrap items-center gap-6 w-full lg:w-auto">
+              {/* Gender Filter */}
+              <div className="relative group w-full sm:w-48">
+                 <span className="absolute -top-2 left-3 px-2 bg-[#05070a] text-[8px] uppercase tracking-widest text-emerald-500/60 z-10">Archive Filter</span>
+                 <select 
+                   value={gender}
+                   onChange={(e) => {setGender(e.target.value); setFilterActive(true);}}
+                   className="w-full bg-black/40 border border-emerald-500/10 px-4 py-3 text-[10px] tracking-widest uppercase focus:outline-none focus:border-emerald-500 transition-all appearance-none text-white cursor-pointer"
+                 >
+                   <option value="">All Genders</option>
+                   <option value="Men">Masculine</option>
+                   <option value="Women">Feminine</option>
+                   <option value="Unisex">Universal</option>
+                 </select>
+                 <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-3 h-3 text-emerald-500/40 pointer-events-none" />
+              </div>
+
+              {/* Sort Filter */}
+              <div className="relative group w-full sm:w-48">
+                 <span className="absolute -top-2 left-3 px-2 bg-[#05070a] text-[8px] uppercase tracking-widest text-emerald-500/60 z-10">Sort Protocol</span>
+                 <select 
+                   value={sortOption}
+                   onChange={(e) => {setSortOption(e.target.value); setFilterActive(true);}}
+                   className="w-full bg-black/40 border border-emerald-500/10 px-4 py-3 text-[10px] tracking-widest uppercase focus:outline-none focus:border-emerald-500 transition-all appearance-none text-white cursor-pointer"
+                 >
+                   <option value="az">A — Z (Archive Order)</option>
+                   <option value="za">Z — A (Reverse)</option>
+                   <option value="priceLowHigh">Price: Ascending</option>
+                   <option value="priceHighLow">Price: Descending</option>
+                 </select>
+                 <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-3 h-3 text-emerald-500/40 pointer-events-none" />
+              </div>
+
+              {(filterActive || searchedProducts.length > 0) && (
+                <button 
+                  onClick={clearAllFilters}
+                  className="flex items-center gap-2 text-red-400/60 hover:text-red-400 text-[10px] uppercase tracking-widest font-bold transition-colors pl-2"
+                >
+                  <RefreshCcw className="w-3 h-3" /> Reset Archives
+                </button>
+              )}
+           </div>
+
+           {/* Search Bar */}
+           <form onSubmit={onSearchHandler} className="relative w-full lg:w-96 group">
+              <input 
+                type="text" 
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="Search The Scent Gallery..."
+                className="w-full bg-black/40 border-b border-emerald-500/10 px-12 py-3 text-[11px] tracking-widest uppercase focus:outline-none focus:border-emerald-500 transition-all text-white placeholder:text-emerald-950 font-mono"
+              />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-500/40 group-focus-within:text-emerald-500 transition-colors" />
+              <button 
+                type="submit"
+                disabled={isSearching}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-emerald-500/40 hover:text-emerald-500 transition-colors"
+              >
+                 {isSearching ? <RefreshCcw className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+              </button>
+           </form>
         </div>
-        {filterActive && (
-          <div className="unfilter-btn">
-            <button
-              onClick={handleUnfilter}
-              className="bg-green-800 px-5 py-2 mt-4 rounded-xl text-white"
-            >
-              Unfilter
-            </button>
+
+        {/* Products Grid */}
+        <div className="relative min-h-[400px]">
+          {sortedProducts.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-10">
+              {displayedProducts.map((product) => (
+                <div key={product._id} className="flex justify-center">
+                  <ProductCard product={product} />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-40 bg-emerald-500/5 rounded-sm border border-emerald-500/10 space-y-6">
+              <div className="p-6 bg-red-500/10 rounded-full">
+                <AlertTriangle className="w-12 h-12 text-red-400" />
+              </div>
+              <div className="text-center space-y-2">
+                <h2 className="text-3xl font-serif text-white">No Manifestations Found</h2>
+                <p className="text-slate-500 text-sm tracking-widest uppercase">The current search parameters yielded no results in our archives.</p>
+              </div>
+              <button 
+                onClick={clearAllFilters}
+                className="px-10 py-4 bg-emerald-600/10 border border-emerald-500/20 text-emerald-500 text-[10px] tracking-[0.4em] uppercase font-bold hover:bg-emerald-500 hover:text-black transition-all"
+              >
+                Return to Full Collections
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Pagination Section */}
+        {sortedProducts.length > 0 && (
+          <div className="pt-20 border-t border-emerald-500/10">
+            <Pagination
+              items={sortedProducts}
+              itemsPerPage={10}
+              onPageChange={(paginated) => setDisplayedProducts(paginated)}
+            />
           </div>
         )}
-       
-       <div className="relative w-[20%] max-w-md mt-5">  
-      <input
-      value={input}
-       onChange={(e)=>{
-        console.log(e.target.value)
-        setInput(e.target.value)}}
-        type="search"
-        placeholder="Search Products..."
-        className="block w-full px-12 py-2 text-base text-gray-700 bg-white border border-gray-300 rounded-full shadow-sm placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none"
-      />
-      <svg onClick={onSearchHandler}
-        className="absolute w-5 h-5 text-gray-400 top-1/2 left-4 transform -translate-y-1/2"
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth="2"
-          d="M10 14l6 6m2-6a8 8 0 11-16 0 8 8 0 0116 0z"
-        />
-      </svg>
-    </div>
-   {searchedProducts.length>0&& <button onClick={clearSearchedProducts} className="bg-red-900 p-2 rounded-lg mt-5">clear </button>
-  }
       </div>
-      <div className="flex justify-center gap-10 px-10 pb-10 mt-5 text-center mx-auto">
-        {displayedProducts.map((product) => (
-          <ProductCard key={product._id} product={product} />
-        ))}
-      </div>
-      {sortedProducts.length === 0 && (
-       <div className="flex flex-col items-center justify-center mt-10 py-5 px-10 rounded-lg shadow-md mr-16">
-       <AlertTriangle className="h-16 w-16 text-red-400 mb-3" aria-hidden="true" />
-       <h2 className="text-center text-xl font-semibold text-gray-600">No Products Found</h2>
-       <p className="text-center text-gray-500 mt-2">Please try adjusting your filters or search.</p>
-     </div>
-      )}
-      <Pagination
-        items={sortedProducts}
-        itemsPerPage={3}
-        onPageChange={handlePagination}
-      />
+
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+        
+        .font-serif {
+          font-family: 'Playfair Display', serif;
+        }
+
+        .font-mono {
+          font-family: 'JetBrains Mono', monospace;
+        }
+
+        select option {
+          background-color: #0c1110;
+          color: white;
+          padding: 10px;
+        }
+
+        /* Custom scrollbar for dropdowns if needed */
+        select::-webkit-scrollbar {
+          width: 5px;
+        }
+        select::-webkit-scrollbar-track {
+          background: #05070a;
+        }
+        select::-webkit-scrollbar-thumb {
+          background: #064e3b;
+        }
+      `}</style>
     </div>
   );
 };
 
 export default AllProductsPage;
-
-
-

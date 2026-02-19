@@ -1,15 +1,23 @@
-import React, { ChangeEvent, useEffect, useRef, useState } from "react";
+
+import React, { ChangeEvent, useEffect, useState } from "react";
 import Modal from "react-modal";
 import api from "@/services/apiService";
 import { AxiosError } from "axios";
-
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import DeleteModal from "@/components/ui/modal/DeleteModal";
-import { FaPlus, FaEdit, FaTrash, FaUpload } from "react-icons/fa";
+import { 
+  Plus, 
+  Edit3, 
+  Trash2, 
+  Upload, 
+  Layers, 
+  X, 
+  ChevronRight
+} from "lucide-react";
 import Pagination from "@/components/Pagination";
 import { AppHttpStatusCodes } from "@/types/statusCode";
-import { PropagateLoader } from "react-spinners";
+import { PulseLoader } from "react-spinners";
 import { ADMIN_API_ROUTES } from "@/routes/api/AdminApiRoutes";
 
 export interface ICategories {
@@ -17,15 +25,22 @@ export interface ICategories {
   categoryName: string;
   categoryImage: string;
 }
+
 const AdminCategoryPage = () => {
-  const [paginatedCategories, setPaginatedCategories] = useState<ICategories[]>(
-    [],
-  );
+  const [paginatedCategories, setPaginatedCategories] = useState<ICategories[]>([]);
   const [loading, setLoading] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const navigate = useNavigate();
   const [refresh, setRefresh] = useState(false);
   const [isModal, setIsModal] = useState(false);
+  const [selectedId, setSelectedId] = useState("");
+  const [categoryName, setCategoryName] = useState("");
+  const [categoryImage, setCategoryImage] = useState<File | null>(null);
+  const [categories, setCategories] = useState<ICategories[]>([]);
+  const [modalIsOpen, setModalIsOpen] = useState(false);
+  const [itemId, setItemId] = useState("");
+  const [selectedCategoryImage, setSelectedCategoryImage] = useState("");
+
   const isModalOpen = () => {
     setIsEdit(false);
     setIsModal(true);
@@ -34,20 +49,13 @@ const AdminCategoryPage = () => {
   const isModelClose = () => {
     setCategoryName("");
     setCategoryImage(null);
+    setSelectedCategoryImage("");
     setIsModal(false);
   };
-  const [selectedId, setSelectedId] = useState("");
-  const [categoryName, setCategoryName] = useState("");
-  const [categoryImage, setCategoryImage] = useState<File | null>(null);
-  const [categories, setCategories] = useState<ICategories[]>([]);
-  const [modalIsOpen, setModalIsOpen] = useState(false);
-  const [itemId, setItemId] = useState("");
-  const [selectedCategoryImage, setSelectedCategoryImage] = useState("");
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const onCategoryAdd = async () => {
     if (!categoryImage || categoryName.trim() === "") {
-      toast.error("All fields are required");
+      toast.error("Integrity error: Classification data missing.");
       return;
     }
 
@@ -56,29 +64,16 @@ const AdminCategoryPage = () => {
       formData.append("categoryImage", categoryImage);
       formData.append("categoryName", categoryName);
       setLoading(true);
-      const response = await api.post(
-        ADMIN_API_ROUTES.CATEGORIES_MANAGEMENT.UPLOAD_CATEGORY,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        },
-      );
+      const response = await api.post(ADMIN_API_ROUTES.CATEGORIES_MANAGEMENT.UPLOAD_CATEGORY, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
       if (response.data.success) {
         setRefresh((prev) => !prev);
-        toast.success("The category has been created and is now available.");
-        setCategoryName("");
-        setCategoryImage(null);
-        setIsModal(false);
+        toast.success("Classification protocol established.");
+        isModelClose();
       }
     } catch (error) {
-      console.error("Error uploading category:", error);
-      if (error instanceof AxiosError)
-        toast.error(
-          error.response?.data.message ||
-            "Something Went Wrong while adding Category",
-        );
+      if (error instanceof AxiosError) toast.error(error.response?.data.message);
     } finally {
       setLoading(false);
     }
@@ -86,294 +81,241 @@ const AdminCategoryPage = () => {
 
   const onCategoryEdit = async () => {
     if (categoryName.trim() === "") {
-      toast.error("Category Name is Required ");
+      toast.error("ID required: Classification name missing.");
       return;
     }
-    let formData = new FormData();
+    const formData = new FormData();
     formData.append("categoryName", categoryName);
     formData.append("categoryId", selectedId);
-    categoryImage
-      ? formData.append("categoryImage", categoryImage)
-      : formData.append("ExistingImage", selectedCategoryImage);
+    if (categoryImage) formData.append("categoryImage", categoryImage);
+    else formData.append("ExistingImage", selectedCategoryImage);
+
     try {
       setLoading(true);
-      const res = await api.put(
-        ADMIN_API_ROUTES.CATEGORIES_MANAGEMENT.EDIT_CATEGORY,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        },
-      );
+      const res = await api.put(ADMIN_API_ROUTES.CATEGORIES_MANAGEMENT.EDIT_CATEGORY, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
       if (res.status === AppHttpStatusCodes.OK) {
-        const updatedCategory = res.data.data;
-        console.log("updated Category", updatedCategory);
-        setCategories(
-          categories.map((category) =>
-            category._id === updatedCategory._id
-              ? { ...updatedCategory }
-              : category,
-          ),
-        );
-        toast.success(res.data.message);
-        setCategoryName("");
-        setCategoryImage(null);
-        setIsModal(false);
+        setRefresh(prev => !prev);
+        toast.success("Classification updated.");
+        isModelClose();
       }
     } catch (error) {
-      if (error instanceof AxiosError)
-        toast.error(error.response?.data.message);
+      if (error instanceof AxiosError) toast.error(error.response?.data.message);
     } finally {
       setLoading(false);
     }
   };
-  const onHandleFile = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event?.target.files) {
-      setCategoryImage(event.target.files[0]);
-    }
-  };
-
-  const openModal = (id: string) => {
-    setModalIsOpen(true);
-    setItemId(id);
-  };
-  const closeModal = () => {
-    setModalIsOpen(false);
-  };
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files![0];
-    setCategoryImage(file);
-    const imageUrl = URL.createObjectURL(file);
-    setSelectedCategoryImage(imageUrl);
+    const file = e.target.files?.[0];
+    if (file) {
+      setCategoryImage(file);
+      setSelectedCategoryImage(URL.createObjectURL(file));
+    }
   };
 
   const onDeleteCategory = async (categoryId: string) => {
     try {
-      const response = await api.delete(
-        ADMIN_API_ROUTES.CATEGORIES_MANAGEMENT.DELETE_CATEGORY(categoryId),
-      );
+      const response = await api.delete(ADMIN_API_ROUTES.CATEGORIES_MANAGEMENT.DELETE_CATEGORY(categoryId));
       if (response.data.success) {
-        toast.success("Category deleted successfully");
+        toast.success("Classification purged.");
         setRefresh((prev) => !prev);
       }
     } catch (error) {
-      console.error("Error deleting category:", error);
-      if (error instanceof AxiosError)
-        toast.error(
-          error.response?.data.message ||
-            "Something Went Wrong While Deleting Category",
-        );
+      if (error instanceof AxiosError) toast.error(error.response?.data.message);
     }
   };
 
-  const getCategories = async () => {
+  const getCategories = React.useCallback(async () => {
     try {
-      const response = await api.get(
-        ADMIN_API_ROUTES.CATEGORIES_MANAGEMENT.GET,
-      );
+      const response = await api.get(ADMIN_API_ROUTES.CATEGORIES_MANAGEMENT.GET);
       if (response.data.success) {
         setCategories(response.data.data);
-        setPaginatedCategories(response.data.data); // Set paginated categories here
+        setPaginatedCategories(response.data.data.slice(0, 5));
       }
     } catch (error) {
-      if (error instanceof AxiosError) {
-        if (error.response?.status === 403) {
-          navigate("/admin");
-        }
-      }
+      if (error instanceof AxiosError && error.response?.status === 403) navigate("/admin");
     }
-  };
+  }, [navigate]);
 
   const OpenEditCategoryModal = (id: string) => {
-    setSelectedId(id);
-    setIsEdit(true);
-    const category = categories.find((category) => id === category._id);
+    const category = categories.find((c) => id === c._id);
     if (category) {
+      setSelectedId(id);
+      setIsEdit(true);
       setCategoryName(category.categoryName);
       setSelectedCategoryImage(category.categoryImage);
-
       setIsModal(true);
     }
   };
 
-  const handlePagination = (items: ICategories[]) => {
-    setPaginatedCategories(items);
-  };
+  const handlePagination = (items: ICategories[]) => setPaginatedCategories(items);
 
   useEffect(() => {
     getCategories();
-  }, [refresh]);
+  }, [refresh, getCategories]);
+
   return (
-    <div className="bg-gradient-to-r from-blue-100 to-purple-100 min-h-screen p-8">
-      {/* Delete Modal */}
+    <div className="space-y-8 pb-12">
       <DeleteModal
         isOpen={modalIsOpen}
-        onRequestClose={closeModal}
+        onRequestClose={() => setModalIsOpen(false)}
         item={itemId}
         onDelete={onDeleteCategory}
-        text="Are you sure? All products belonging to this category will be deleted."
+        text="Warning: All specimens associated with this classification will be purged. Continue?"
       />
 
-      {/* Title */}
-      <h1 className="text-4xl font-bold text-center text-gray-800 mb-6">
-        Manage Categories
-      </h1>
+      {/* Header Area */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-emerald-500/10 pb-8">
+        <div className="space-y-1">
+          <div className="flex items-center gap-3">
+             <div className="w-8 h-[1px] bg-emerald-500" />
+             <span className="text-emerald-500 tracking-[0.4em] uppercase text-[9px] font-bold">Taxonomy Engine</span>
+          </div>
+          <h1 className="text-4xl md:text-5xl font-serif text-white tracking-tighter">Classification Archive</h1>
+        </div>
 
-      {/* Add Category Button */}
-      <div className="flex justify-end mb-6">
         <button
           onClick={isModalOpen}
-          className="bg-green-500 text-white py-3 px-5 rounded-lg shadow-lg hover:bg-green-600 transition flex items-center gap-2"
+          className="flex items-center gap-3 px-8 py-4 bg-emerald-500 text-black text-[11px] font-bold uppercase tracking-widest rounded-2xl hover:bg-emerald-400 hover:shadow-[0_0_30px_rgba(16,185,129,0.3)] transition-all active:scale-95"
         >
-          <FaPlus className="h-5 w-5" />
-          Add Category
+          <Plus size={16} />
+          <span>New Classification</span>
         </button>
       </div>
 
-      {/* Add Category Modal */}
-      <Modal
-        isOpen={isModal}
-        onRequestClose={isModelClose}
-        contentLabel={`${isEdit ? "Edit Category" : "Add New Category"}`}
-        className="bg-white p-6 rounded-lg shadow-lg max-w-lg w-full relative text-gray-700"
-        overlayClassName="fixed inset-0 bg-black bg-opacity-30 flex justify-center items-center"
-      >
-        <button
-          onClick={isModelClose}
-          className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 focus:outline-none"
-        >
-          <FaTrash className="h-6 w-6" />
-        </button>
-
-        <h2 className="text-3xl font-semibold text-gray-800 text-center mb-5">
-          {isEdit ? "Edit Category" : "Add new Category"}
-        </h2>
-
-        <div className="space-y-5">
-          {/* Category Name Input */}
-          <div className="flex items-center border-b border-gray-300 py-2">
-            <FaEdit className="h-5 w-5 text-gray-400 mr-3" />
-            <input
-              type="text"
-              placeholder="Category Name"
-              value={categoryName}
-              onChange={(event) => setCategoryName(event.target.value)}
-              className="w-full p-2 focus:outline-none"
-            />
-          </div>
-
-          {/* Category Image Input */}
-          <div className="flex justify-evenly items-center border-b border-gray-300 py-2">
-            {isEdit ? (
-              <>
-                <input
-                  name="categoryImage"
-                  onChange={handleFileChange}
-                  ref={fileInputRef}
-                  type="file"
-                  className=" hidden"
-                />
-                <img
-                  className="w-32 h-36 object-cover rounded-md"
-                  src={selectedCategoryImage}
-                  alt=""
-                />
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  className="flex flex-col justify-center items-center w-28 h-28 bg-slate-200 rounded-full shadow-lg hover:bg-slate-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-600 transition duration-200"
-                >
-                  <img
-                    className="h-[50%] mb-2"
-                    src="https://cdn.iconscout.com/icon/premium/png-512-thumb/upload-image-5062268-4213843.png?f=webp&w=512"
-                    alt="Upload Icon"
-                  />
-                  <span className="text-xs font-medium text-slate-700">
-                    Upload Image
-                  </span>
-                </button>
-              </>
-            ) : (
-              <>
-                <FaUpload className="h-5 w-5 text-gray-400 mr-3" />
-                <input
-                  type="file"
-                  name="categoryImage"
-                  onChange={onHandleFile}
-                  className="w-full text-gray-600 focus:outline-none"
-                />
-              </>
-            )}
-          </div>
-
-          {/* Submit Button */}
-          <button
-            onClick={isEdit ? onCategoryEdit : onCategoryAdd}
-            className="w-full bg-green-500 text-white py-3 rounded-lg font-semibold hover:bg-green-600 transition flex items-center justify-center gap-2"
-          >
-            {loading ? (
-              <PropagateLoader color="white" size={10} className="py-3" />
-            ) : (
-              <>
-                <FaUpload className="h-5 w-5" />
-                {isEdit ? "Edit Category" : "Add Category"}
-              </>
-            )}
-          </button>
-        </div>
-      </Modal>
-
-      {/* Category List Table */}
-      <div className="overflow-x-auto mt-8">
-        <table className="min-w-full bg-white rounded-lg shadow-lg">
-          <thead className="bg-blue-500 text-white rounded-t-lg">
-            <tr>
-              <th className="p-4 text-left">Category Image</th>
-              <th className="p-4 text-left">Category Name</th>
-              <th className="p-4 text-center">Actions</th>
+      {/* Categories Grid Table */}
+      <div className="bg-white/5 backdrop-blur-3xl border border-white/5 rounded-[40px] overflow-hidden shadow-2xl">
+        <table className="min-w-full">
+          <thead>
+            <tr className="bg-white/[0.02] border-b border-white/5">
+              <th className="px-8 py-5 text-left text-[9px] font-bold text-emerald-500/60 uppercase tracking-[0.3em]">Visual Type</th>
+              <th className="px-8 py-5 text-left text-[9px] font-bold text-emerald-500/60 uppercase tracking-[0.3em]">Nomenclature</th>
+              <th className="px-8 py-5 text-right text-[9px] font-bold text-emerald-500/60 uppercase tracking-[0.3em]">Strategic Control</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200">
+          <tbody className="divide-y divide-white/[0.03]">
             {paginatedCategories.map((category) => (
-              <tr key={category._id} className="hover:bg-gray-100 transition">
-                <td className="p-4">
-                  <img
-                    src={category.categoryImage}
-                    alt={category.categoryName}
-                    className="h-16 w-16 object-cover rounded-lg shadow"
-                  />
+              <tr key={category._id} className="group hover:bg-emerald-500/[0.02] transition-all duration-500">
+                <td className="px-8 py-6">
+                   <div className="relative w-20 h-20 rounded-2xl overflow-hidden border border-white/5 bg-black/40 group-hover:scale-105 transition-transform duration-500">
+                      <img
+                        src={category.categoryImage}
+                        alt=""
+                        className="w-full h-full object-cover brightness-90 group-hover:brightness-100"
+                      />
+                   </div>
                 </td>
-                <td className="p-4 text-gray-700">{category.categoryName}</td>
-                <td className="p-4 text-center flex justify-center space-x-3">
-                  {/* Edit Button */}
-                  <button
-                    onClick={() => OpenEditCategoryModal(category._id)}
-                    className="bg-yellow-500 text-white py-2 px-4 rounded-lg shadow hover:bg-yellow-600 transition flex items-center gap-2"
-                  >
-                    <FaEdit className="h-5 w-5" />
-                    Edit
-                  </button>
-
-                  {/* Delete Button */}
-                  <button
-                    onClick={() => openModal(category._id)}
-                    className="bg-red-500 text-white py-2 px-4 rounded-lg shadow hover:bg-red-600 transition flex items-center gap-2"
-                  >
-                    <FaTrash className="h-5 w-5" />
-                    Delete
-                  </button>
+                <td className="px-8 py-6">
+                   <div className="flex items-center gap-3">
+                      <Layers size={14} className="text-emerald-500/40" />
+                      <span className="text-[13px] font-bold text-white uppercase tracking-widest">{category.categoryName}</span>
+                   </div>
+                </td>
+                <td className="px-8 py-6">
+                   <div className="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-all translate-x-4 group-hover:translate-x-0 duration-500">
+                      <button
+                        onClick={() => OpenEditCategoryModal(category._id)}
+                        className="p-3 rounded-xl bg-white/5 border border-white/10 text-slate-400 hover:text-emerald-500 hover:border-emerald-500/30 transition-all hover:scale-110"
+                      >
+                        <Edit3 size={16} />
+                      </button>
+                      <button
+                        onClick={() => { setItemId(category._id); setModalIsOpen(true); }}
+                        className="p-3 rounded-xl bg-white/5 border border-white/10 text-slate-400 hover:text-red-500 hover:border-red-500/30 transition-all hover:scale-110"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                   </div>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-      <Pagination
-        items={categories}
-        itemsPerPage={2}
-        onPageChange={handlePagination}
-      />
+
+      <div className="flex justify-center pt-8">
+        <div className="bg-white/5 backdrop-blur-3xl border border-white/5 px-6 py-4 rounded-[32px]">
+           <Pagination
+             items={categories}
+             itemsPerPage={5}
+             onPageChange={handlePagination}
+           />
+        </div>
+      </div>
+
+      {/* Classification Modal */}
+      <Modal
+        isOpen={isModal}
+        onRequestClose={isModelClose}
+        className="bg-[#0c1110] backdrop-blur-3xl p-0 rounded-[48px] shadow-2xl max-w-lg w-full relative outline-none border border-white/10 overflow-hidden"
+        overlayClassName="fixed inset-0 bg-black/80 backdrop-blur-md flex justify-center items-center z-[100]"
+      >
+        <div className="p-8 border-b border-white/5 flex justify-between items-center bg-white/[0.01]">
+           <h2 className="text-2xl font-serif text-white tracking-tight">
+             {isEdit ? "Refine Classification" : "Initialize Classification"}
+           </h2>
+           <button onClick={isModelClose} className="p-2 text-slate-500 hover:text-white transition-colors">
+              <X size={20} />
+           </button>
+        </div>
+
+        <div className="p-10 space-y-8">
+           <div className="space-y-2">
+              <label className="text-[9px] uppercase tracking-[0.3em] font-bold text-slate-500 ml-1">Archive Nomenclature</label>
+              <input
+                type="text"
+                placeholder="EX: VERTICAL NOIR"
+                value={categoryName}
+                onChange={(e) => setCategoryName(e.target.value)}
+                className="w-full bg-black/40 border border-white/10 rounded-2xl px-6 py-4 text-sm text-white focus:outline-none focus:border-emerald-500/50 transition-all placeholder:text-slate-700 font-bold tracking-widest"
+              />
+           </div>
+
+           <div className="space-y-4">
+              <label className="text-[9px] uppercase tracking-[0.3em] font-bold text-slate-500 ml-1">Visual Signature</label>
+              <div 
+                className="relative group border-2 border-dashed border-white/5 rounded-3xl p-8 text-center hover:border-emerald-500/30 transition-all cursor-pointer bg-black/20 overflow-hidden"
+              >
+                 <input
+                   type="file"
+                   onChange={handleFileChange}
+                   className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                 />
+                 {selectedCategoryImage ? (
+                   <div className="flex items-center gap-6 justify-center">
+                      <img src={selectedCategoryImage} className="w-24 h-24 object-cover rounded-xl border border-white/10" alt="" />
+                      <div className="text-left space-y-1">
+                         <p className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">Capture Active</p>
+                         <p className="text-[9px] text-slate-500 font-mono">protocol.img_override</p>
+                      </div>
+                   </div>
+                 ) : (
+                   <div className="space-y-2">
+                      <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center mx-auto transition-transform group-hover:scale-110">
+                         <Upload size={20} className="text-emerald-500" />
+                      </div>
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-slate-600">Sync Visual Token</p>
+                   </div>
+                 )}
+              </div>
+           </div>
+
+           <button
+             onClick={isEdit ? onCategoryEdit : onCategoryAdd}
+             disabled={loading}
+             className="w-full py-5 bg-emerald-500 text-black text-[11px] font-bold uppercase tracking-[0.2em] rounded-2xl flex items-center justify-center gap-3 hover:bg-white transition-all shadow-[0_20px_40px_rgba(16,185,129,0.2)]"
+           >
+             {loading ? <PulseLoader color="black" size={8} /> : (
+               <>
+                 <ChevronRight size={16} />
+                 {isEdit ? "Update Classification" : "Commit Protocol"}
+               </>
+             )}
+           </button>
+        </div>
+      </Modal>
     </div>
   );
 };

@@ -1,4 +1,5 @@
-import { ChangeEvent, useEffect, useState } from "react";
+
+import React, { ChangeEvent, useEffect, useState } from "react";
 import api from "@/services/apiService";
 import { AxiosError } from "axios";
 import { useNavigate } from "react-router-dom";
@@ -7,6 +8,16 @@ import { toast } from "sonner";
 import { IAddress } from "@/types/AddressTypes";
 import Pagination from "@/components/Pagination";
 import { ADMIN_API_ROUTES } from "@/routes/api/AdminApiRoutes";
+import { 
+  Search, 
+  ShieldAlert, 
+  ShieldCheck, 
+  Phone, 
+  Mail,
+  User as UserIcon,
+  Lock,
+  Unlock
+} from "lucide-react";
 
 interface IUser {
   _id: string;
@@ -21,29 +32,28 @@ const AdminUserManagement = () => {
   const navigate = useNavigate();
   const [users, setUsers] = useState<IUser[]>([]);
   const [searchedUsers, setSearchedUsers] = useState<IUser[]>([]); 
-  const [displayedUsers, setDisplayedUsers] = useState<IUser[]>([]); // State for currently displayed users
+  const [displayedUsers, setDisplayedUsers] = useState<IUser[]>([]);
   const [input, setInput] = useState('');
 
   const handlePagination = (users: IUser[]) => {
-    setDisplayedUsers(users); // Update displayed users based on pagination
+    setDisplayedUsers(users);
   };
 
-  const getAllUsers = async () => {
+  const getAllUsers = React.useCallback(async () => {
     try {
-      const response = await api(ADMIN_API_ROUTES.USERS_MANAGEMENT.GET);
+      const response = await api.get(ADMIN_API_ROUTES.USERS_MANAGEMENT.GET);
       if (response.data.success) {
         setUsers(response.data.data);
-        setDisplayedUsers(response.data.data.slice(0, 5)); // Default to the first page
+        setDisplayedUsers(response.data.data.slice(0, 8));
       }
     } catch (error) {
-      if (error instanceof AxiosError) {
-        if (error.response?.status === AppHttpStatusCodes.FORBIDDEN) {
-          navigate('/admin');
-        }
+      if (error instanceof AxiosError && error.response?.status === AppHttpStatusCodes.FORBIDDEN) {
+        navigate('/admin');
       }
     }
-  };
-    const toggleBlock = async (id: string) => {
+  }, [navigate]);
+
+  const toggleBlock = async (id: string) => {
     const updatedUsers = (prevUsers: IUser[]) =>
       prevUsers.map((user) =>
         user._id === id
@@ -52,62 +62,64 @@ const AdminUserManagement = () => {
       );
   
     setUsers((prevUsers) => updatedUsers(prevUsers));
-    setSearchedUsers((prevUsers) => updatedUsers(prevUsers)); // Update searchedUsers as well
+    setSearchedUsers((prevUsers) => updatedUsers(prevUsers));
   
     try {
       await api.patch(ADMIN_API_ROUTES.USERS_MANAGEMENT.UPDATE_STATUS, {
         id,
         status: users.find((user) => user._id === id)?.status,
       });
+      toast.success("Security protocol updated.");
     } catch (error) {
-      if (error instanceof AxiosError) {
-        if (error.response?.status === 403) {
-          navigate('/admin');
-        }
-      }
+      if (error instanceof AxiosError && error.response?.status === 403) navigate('/admin');
     }
   };
 
-  const openConfirmModal=(userId:string)=>{
+  const openConfirmModal = (userId: string) => {
     toast.custom(
       (id) => (
-        <div
-          className="flex flex-col items-center p-6 bg-gradient-to-r from-blue-500 to-blue-700 text-white shadow-lg rounded-lg border border-gray-300 transition-transform transform hover:scale-105"
-          onClick={() => toast.dismiss(id)}
-        >
-          <p className="text-2xl font-bold">Confirm Action</p>
-          <p className="text-sm mt-2 opacity-90">
-            Are you sure you want to change the status?
+        <div className="bg-[#0c1110] border border-white/10 p-8 rounded-[38px] shadow-2xl backdrop-blur-3xl min-w-[320px] space-y-6">
+          <div className="flex items-center gap-4 text-emerald-500">
+            <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center">
+              <ShieldAlert size={24} />
+            </div>
+            <div>
+              <p className="text-xl font-serif text-white tracking-tight">Override Security?</p>
+              <p className="text-[9px] uppercase tracking-widest text-slate-500 font-bold">Personnel Status Modification</p>
+            </div>
+          </div>
+          
+          <p className="text-xs text-slate-400 font-light leading-relaxed">
+            Are you certain you wish to modify the access protocol for this operative?
           </p>
-          <div className="flex space-x-4 mt-4">
+
+          <div className="flex gap-3">
             <button
-              className="px-5 py-2 bg-blue-600 rounded-full hover:bg-blue-700 transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50"
+              className="flex-grow px-6 py-3.5 bg-emerald-500 text-black text-[10px] font-bold uppercase tracking-widest rounded-xl hover:bg-white transition-all shadow-[0_10px_20px_rgba(16,185,129,0.2)]"
               onClick={() => {
-                toggleBlock(userId) ; 
+                toggleBlock(userId); 
                 toast.dismiss(id);
               }}
             >
-              Yes
+              Confirm
             </button>
             <button
-              className="px-5 py-2 bg-gray-800 rounded-full text-white hover:bg-gray-700 transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-50"
-              onClick={() => toast.dismiss(id)} // Dismiss toast on No
+              className="px-6 py-3.5 bg-white/5 text-white text-[10px] font-bold uppercase tracking-widest rounded-xl hover:bg-white/10 transition-all border border-white/5"
+              onClick={() => toast.dismiss(id)}
             >
-              No
+              Abort
             </button>
           </div>
         </div>
       ),
-      {
-        duration: 5000,
-      }
+      { duration: 6000 }
     );
   }
 
   const onSearchUser = async () => {
     if (input.length === 0) {
       setSearchedUsers(users);
-      setDisplayedUsers(users.slice(0, 5)); // Reset to first page with full users
+      setDisplayedUsers(users.slice(0, 8));
       return;
     }
 
@@ -115,103 +127,122 @@ const AdminUserManagement = () => {
       const res = await api.post(ADMIN_API_ROUTES.USERS_MANAGEMENT.SEARCH_USER, { text: input });
       if (res.status === AppHttpStatusCodes.OK) {
         setSearchedUsers(res.data.users);
-        setDisplayedUsers(res.data.users.slice(0, 5)); // Default to the first page
+        setDisplayedUsers(res.data.users.slice(0, 8));
       }
     } catch (error) {
-      if (error instanceof AxiosError) {
-        toast.error(error.response?.data.message);
-      }
+      if (error instanceof AxiosError) toast.error(error.response?.data.message);
     }
   };
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setInput(value);
-
     if (value.length === 0) {
       setSearchedUsers(users);
-      setDisplayedUsers(users.slice(0, 5)); // Reset to first page
+      setDisplayedUsers(users.slice(0, 8));
     }
   };
 
   useEffect(() => {
     getAllUsers();
-  }, []);
+  }, [getAllUsers]);
 
   return (
-    <div className="container mx-auto p-5 bg-gray-100">
-      <div className="flex justify-between mb-5">
-        <h1 className="text-4xl font-bold text-gray-800 mb-8 border-b pb-4">User Management</h1>
-        <div className="flex items-center">
-          <input
-            placeholder="Search for customer"
-            type="text"
-            value={input}
-            onChange={handleInputChange}
-            className="w-[300px] font-Lilita py-2 px-4 text-gray-700 rounded-lg mr-5 border border-purple-200"
-          />
-          <button onClick={onSearchUser} className="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded">
-            Search
-          </button>
+    <div className="space-y-8 pb-12">
+      {/* Header Area */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-emerald-500/10 pb-8">
+        <div className="space-y-1">
+          <div className="flex items-center gap-3">
+             <div className="w-8 h-[1px] bg-emerald-500" />
+             <span className="text-emerald-500 tracking-[0.4em] uppercase text-[9px] font-bold">Operative Control</span>
+          </div>
+          <h1 className="text-4xl md:text-5xl font-serif text-white tracking-tighter">Personnel Registry</h1>
+        </div>
+
+        <div className="relative group">
+           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-500/40 group-focus-within:text-emerald-500 transition-colors" />
+           <input
+             placeholder="Search operative..."
+             type="text"
+             value={input}
+             onChange={handleInputChange}
+             onKeyDown={(e) => e.key === 'Enter' && onSearchUser()}
+             className="w-full md:w-80 pl-12 pr-6 py-4 bg-white/5 border border-white/5 rounded-2xl text-[11px] font-bold uppercase tracking-widest text-white placeholder:text-slate-600 focus:outline-none focus:border-emerald-500/50 transition-all shadow-xl"
+           />
         </div>
       </div>
 
-      <table className="w-full bg-white shadow-md rounded-lg overflow-hidden text-gray-700">
-        <thead className="bg-purple-800 text-white">
-          <tr>
-            <th className="text-left py-3 px-4">Name</th>
-            <th className="text-left py-3 px-4">Email</th>
-            <th className="text-left py-3 px-4">Phone</th>
-            <th className="text-left py-3 px-4">Address</th>
-            <th className="text-left py-3 px-4">Status</th>
-            <th className="text-left py-3 px-4">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {displayedUsers.map((user) => (
-            <tr key={user._id} className="border-b border-gray-200 hover:bg-gray-100">
-              <td className="py-3 px-4">{user.username}</td>
-              <td className="py-3 px-4">{user.email}</td>
-              <td className="py-3 px-4">{user.phone || "N/A"}</td>
-              <td className="py-3 px-4 max-w-xs overflow-hidden text-ellipsis whitespace-nowrap">
-                {user.addresses?.length === 0 ? (
-                  "No Addresses Found"
-                ) : (
-                  <p>
-                    {user.addresses?.[0].Name}, {user.addresses?.[0].Locality},<br />
-                    {user.addresses?.[0].District}, {user.addresses?.[0].State?.toUpperCase() || ""}
-                    - {user.addresses?.[0].Pincode || ""}
-                  </p>
-                )}
-              </td>
-              <td className="py-3 px-4">
-                <span
-                  className={`${
-                    user.status === "ACTIVE" ? "bg-blue-500" : "bg-orange-500"
-                  } text-white py-1 px-3 rounded-full text-sm`}
-                >
-                  {user.status}
-                </span>
-              </td>
-              <td className="py-3 px-4">
-                <button
-                  onClick={() => openConfirmModal(user._id)}
-                  className={`${
-                    user.status === "ACTIVE" ? "bg-red-500" : "bg-green-500"
-                  } text-white py-2 px-4 rounded`}
-                >
-                  {user.status === "ACTIVE" ? "Block" : "Unblock"}
-                </button>
-              </td>
+      {/* Persistence Grid */}
+      <div className="bg-white/5 backdrop-blur-3xl border border-white/5 rounded-[40px] overflow-hidden shadow-2xl">
+        <table className="w-full">
+          <thead>
+            <tr className="bg-white/[0.02] border-b border-white/5">
+              <th className="px-8 py-5 text-left text-[9px] font-bold text-emerald-500/60 uppercase tracking-[0.3em]">Operative</th>
+              <th className="px-8 py-5 text-left text-[9px] font-bold text-emerald-500/60 uppercase tracking-[0.3em]">Personnel Data</th>
+              <th className="px-8 py-5 text-left text-[9px] font-bold text-emerald-500/60 uppercase tracking-[0.3em]">Oversight Status</th>
+              <th className="px-8 py-5 text-right text-[9px] font-bold text-emerald-500/60 uppercase tracking-[0.3em]">Override Control</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-      <Pagination 
-        items={input.length > 0 ? searchedUsers : users} 
-        itemsPerPage={5} 
-        onPageChange={handlePagination}
-      />
+          </thead>
+          <tbody className="divide-y divide-white/[0.03]">
+            {displayedUsers.map((user) => (
+              <tr key={user._id} className="group hover:bg-emerald-500/[0.02] transition-all duration-500">
+                <td className="px-8 py-6">
+                   <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-center text-slate-500 group-hover:text-emerald-500 transition-colors">
+                         <UserIcon size={20} />
+                      </div>
+                      <div className="space-y-0.5">
+                         <p className="text-[13px] font-bold text-white uppercase tracking-widest">{user.username}</p>
+                         <p className="text-[9px] font-mono text-slate-500 uppercase font-bold tracking-tighter">ID: {user._id.slice(-8)}</p>
+                      </div>
+                   </div>
+                </td>
+                <td className="px-8 py-6">
+                   <div className="space-y-1.5">
+                      <div className="flex items-center gap-2 text-slate-400 group-hover:text-white transition-colors">
+                         <Mail size={12} className="text-emerald-500/40" />
+                         <span className="text-[11px] font-medium tracking-tight whitespace-nowrap overflow-hidden text-ellipsis max-w-[150px]">{user.email}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-slate-400 group-hover:text-white transition-colors">
+                         <Phone size={12} className="text-emerald-500/40" />
+                         <span className="text-[10px] font-mono tracking-widest">{user.phone || "UNPUBLISHED"}</span>
+                      </div>
+                   </div>
+                </td>
+                <td className="px-8 py-6">
+                   <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full border ${user.status === "ACTIVE" ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500' : 'bg-orange-500/10 border-orange-500/20 text-orange-400'}`}>
+                      {user.status === "ACTIVE" ? <ShieldCheck size={12} /> : <ShieldAlert size={12} />}
+                      <span className="text-[9px] font-bold uppercase tracking-widest">{user.status}</span>
+                   </div>
+                </td>
+                <td className="px-8 py-6 text-right">
+                   <button
+                     onClick={() => openConfirmModal(user._id)}
+                     className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border text-[10px] font-bold uppercase tracking-widest transition-all ${
+                       user.status === "ACTIVE" 
+                         ? "bg-white/5 border-white/10 text-slate-400 hover:bg-red-500 hover:border-red-500 hover:text-white" 
+                         : "bg-emerald-500 border-emerald-500 text-black hover:bg-white hover:border-white"
+                     }`}
+                   >
+                     {user.status === "ACTIVE" ? <Lock size={12} /> : <Unlock size={12} />}
+                     <span>{user.status === "ACTIVE" ? "RESCIND ACCESS" : "AUTHORIZE ACCESS"}</span>
+                   </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="flex justify-center pt-8">
+        <div className="bg-white/5 backdrop-blur-3xl border border-white/5 px-6 py-4 rounded-[32px]">
+           <Pagination 
+             items={input.length > 0 ? searchedUsers : users} 
+             itemsPerPage={8} 
+             onPageChange={handlePagination}
+           />
+        </div>
+      </div>
     </div>
   );
 };

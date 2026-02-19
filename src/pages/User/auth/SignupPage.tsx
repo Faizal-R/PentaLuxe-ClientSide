@@ -1,11 +1,12 @@
-import React, { useEffect, useState, ChangeEvent } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { toast } from "sonner";
+import { User, Mail, Lock, Phone, Sparkles, UserPlus, ArrowRight, RefreshCcw, ShieldCheck } from "lucide-react";
+
 import api from "@/services/apiService";
 import GoogleAuth from "@/components/GoogleAuthentication/GoogleAuth";
-import { toast } from "sonner";
 import { AppHttpStatusCodes } from "@/types/statusCode";
-import { PulseLoader } from "react-spinners";
-import { useSelector } from "react-redux";
 import { USER_API_ROUTES } from "@/routes/api/UserApiRoutes";
 
 const SignupPage = () => {
@@ -17,30 +18,30 @@ const SignupPage = () => {
   const [phone, setPhone] = useState("");
 
   const navigate = useNavigate();
-  const user = useSelector((state: any) => state.user.user);
+  const user = useSelector((state: { user: { user: { name?: string, email: string } } }) => state.user.user);
 
   useEffect(() => {
     if (user) navigate("/");
-  }, []);
+  }, [user, navigate]);
 
-  const registerHandler = async (
-    event: React.MouseEvent<HTMLButtonElement>,
-  ) => {
+  const handleRegister = async (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
 
-    if (!username.trim()) return toast.error("Username is required");
-    if (!email.trim()) return toast.error("Email is required");
-    if (!password.trim() || !confirmPassword.trim())
-      return toast.error("Passwords are required");
-    if (password !== confirmPassword)
-      return toast.error("Passwords don't match");
-    if (!phone) return toast.error("Phone number is required");
-    if (phone.length !== 10)
-      return toast.error("Phone number must have exactly 10 digits");
+    if (!username.trim() || !email.trim() || !password.trim() || !phone) {
+      toast.error("Please fill in all required fields to proceed");
+      return;
+    }
+    if (password !== confirmPassword) {
+      toast.error("Passwords do not match");
+      return;
+    }
+    if (phone.length !== 10) {
+      toast.error("Phone number must be 10 digits");
+      return;
+    }
 
+    setIsLoading(true);
     try {
-      setIsLoading(true);
-
       const response = await api.post(USER_API_ROUTES.AUTH.REGISTER, {
         email,
         username,
@@ -49,183 +50,199 @@ const SignupPage = () => {
       });
 
       if (response.status === AppHttpStatusCodes.CREATED) {
-        toast.success(response.data.message);
+        toast.success("Account created. Please verify your email.");
         navigate(`/otp-verify/${email}`);
       }
-    } catch (error: any) {
-      toast.error(
-        error.response?.data.message || "Network error or other issue",
-      );
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'response' in error) {
+        const axiosError = error as { response: { data: { message: string } } };
+        toast.error(axiosError.response?.data.message || "Registration failed");
+      } else {
+        toast.error("Registration failed");
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen grid lg:grid-cols-2">
-      {/* LEFT SIDE */}
-      <div className="hidden lg:flex flex-col justify-center items-center bg-black text-white px-16 relative">
-        <div className="absolute inset-0 bg-[url('/assets/Woman_in_Gold_RVB_72dpi_desktop.webp')] bg-cover bg-center opacity-30"></div>
+    <div className="min-h-screen grid lg:grid-cols-2 selection:bg-emerald-500 selection:text-black">
+      
+      {/* Left Column: Branding Experience */}
+      <div className="hidden lg:flex flex-col justify-center items-center bg-[#05070a] relative overflow-hidden px-20">
+         <div className="absolute inset-0 bg-gradient-to-br from-emerald-900/20 via-black to-black" />
+         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-emerald-500/5 blur-[120px] rounded-full animate-pulse" />
+         
+         <div className="relative z-10 space-y-12 text-center">
+            <div className="space-y-4">
+               <div className="flex items-center justify-center gap-4">
+                  <div className="h-px w-12 bg-emerald-500/40" />
+                  <Sparkles className="w-5 h-5 text-emerald-500" />
+                  <div className="h-px w-12 bg-emerald-500/40" />
+               </div>
+               <h1 className="text-7xl font-serif text-white tracking-widest leading-none">PENTA<span className="text-emerald-500 italic">LUXE</span></h1>
+               <p className="text-xs tracking-[0.6em] text-emerald-500/60 uppercase font-bold">Join the Collection</p>
+            </div>
+            
+            <p className="text-slate-500 text-sm font-light max-w-sm mx-auto leading-relaxed">
+               Begin your journey as a Pentaluxe curator. Gain access to the world's most exclusive olfactory archives and limited manifestations.
+            </p>
 
-        <div className="relative z-10 text-center space-y-6">
-          <h1 className="text-5xl tracking-widest font-light">PENTALUXE</h1>
-          <p className="text-sm tracking-[0.3em] text-gray-300 uppercase">
-            Luxury Perfume Collection
-          </p>
-          <div className="w-20 h-[1px] bg-yellow-500 mx-auto"></div>
-          <p className="text-gray-400 text-sm max-w-xs leading-relaxed">
-            Elevate your fragrance experience with timeless elegance.
-          </p>
-        </div>
+             <div className="pt-12 text-[10px] tracking-[0.4em] text-emerald-500/20 uppercase font-bold border-t border-emerald-500/10 inline-block px-12">
+                Create Your Account
+             </div>
+         </div>
       </div>
 
-      {/* RIGHT SIDE */}
-      <div className="flex items-center justify-center bg-gray-50 px-6 py-5">
-        <div className="w-full max-w-2xl bg-white rounded-2xl shadow-xl p-8 md:p-10">
-          {/* Mobile Brand */}
-          <div className="lg:hidden text-center mb-8">
-            <h1 className="text-3xl tracking-widest font-light text-black">
-              PENTALUXE
-            </h1>
-            <div className="w-16 h-[2px] bg-yellow-500 mx-auto mt-3"></div>
-          </div>
+      {/* Right Column: Interaction Section */}
+      <div className="flex items-center justify-center bg-[#05070a] px-6 py-12 lg:border-l border-emerald-500/10 overflow-y-auto">
+         <div className="w-full max-w-2xl space-y-10 animate-in fade-in slide-in-from-right-8 duration-1000 my-auto">
+            
+            {/* Header */}
+            <div className="text-center lg:text-left space-y-2">
+                <div className="flex items-center justify-center lg:justify-start gap-3 mb-4">
+                   <UserPlus className="w-4 h-4 text-emerald-500" />
+                   <span className="text-emerald-500 tracking-[0.4em] uppercase text-[10px] font-bold">Sign Up</span>
+                </div>
+                <h2 className="text-4xl font-serif text-white">Join <span className="text-emerald-500 italic">Us.</span></h2>
+                <p className="text-slate-500 text-xs tracking-widest uppercase font-bold">Create an account to start your journey.</p>
+             </div>
 
-          <h2 className="text-2xl font-semibold text-gray-800 mb-2">
-            Create Account
-          </h2>
-          <p className="text-gray-500 text-sm mb-8">
-            Join and discover your signature fragrance.
-          </p>
+            {/* Interaction Area */}
+            <div className="space-y-10">
+               
+                {/* Google Auth */}
+                <div className="group pentaluxe-google-btn">
+                   <GoogleAuth text="Sign up with Google" />
+                </div>
 
-          <div className="mb-6">
-            <GoogleAuth text="Sign up with Google" />
-          </div>
+                <div className="flex items-center gap-4 text-emerald-500/10">
+                   <div className="h-px flex-grow bg-current" />
+                   <span className="text-[9px] uppercase tracking-[0.3em] font-bold">Or sign up with email</span>
+                   <div className="h-px flex-grow bg-current" />
+                </div>
 
-          <div className="flex items-center mb-8">
-            <div className="flex-1 h-px bg-gray-300"></div>
-            <span className="px-3 text-xs text-gray-400">OR</span>
-            <div className="flex-1 h-px bg-gray-300"></div>
-          </div>
+               {/* Inputs Grid */}
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
+                  <div className="group space-y-2">
+                      <label className="flex items-center gap-2 text-[10px] uppercase tracking-[0.3em] font-bold text-slate-500 group-focus-within:text-emerald-500 transition-colors">
+                         <User className="w-3 h-3" />
+                         Full Name
+                      </label>
+                     <input
+                        type="text"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        placeholder="John Doe"
+                        className="w-full bg-emerald-950/[0.03] border-b border-emerald-500/10 px-0 py-4 text-lg font-serif text-white focus:outline-none focus:border-emerald-500 transition-all placeholder:text-emerald-900 font-light"
+                     />
+                  </div>
 
-          {/* FORM GRID */}
-          <div className="grid md:grid-cols-2 gap-5">
-            <div>
-              <label className="block text-sm text-gray-600 mb-2">
-                Username
-              </label>
-              <input
-                type="text"
-                value={username}
-                onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                  setUsername(e.target.value)
-                }
-                placeholder="John Doe"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg
-                           bg-white text-black placeholder:text-gray-400
-                           caret-black
-                           focus:ring-2 focus:ring-black focus:border-black
-                           focus:outline-none transition"
-              />
+                  <div className="group space-y-2">
+                      <label className="flex items-center gap-2 text-[10px] uppercase tracking-[0.3em] font-bold text-slate-500 group-focus-within:text-emerald-500 transition-colors">
+                         <Phone className="w-3 h-3" />
+                         Phone Number
+                      </label>
+                     <input
+                        type="tel"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        placeholder="9876543210"
+                        className="w-full bg-emerald-950/[0.03] border-b border-emerald-500/10 px-0 py-4 text-lg font-mono text-white focus:outline-none focus:border-emerald-500 transition-all placeholder:text-emerald-900"
+                     />
+                  </div>
+
+                  <div className="md:col-span-2 group space-y-2">
+                      <label className="flex items-center gap-2 text-[10px] uppercase tracking-[0.3em] font-bold text-slate-500 group-focus-within:text-emerald-500 transition-colors">
+                         <Mail className="w-3 h-3" />
+                         Email Address
+                      </label>
+                     <input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="you@pentaluxe.com"
+                        className="w-full bg-emerald-950/[0.03] border-b border-emerald-500/10 px-0 py-4 text-lg font-serif text-white focus:outline-none focus:border-emerald-500 transition-all placeholder:text-emerald-900 font-light"
+                     />
+                  </div>
+
+                  <div className="group space-y-2">
+                      <label className="flex items-center gap-2 text-[10px] uppercase tracking-[0.3em] font-bold text-slate-500 group-focus-within:text-emerald-500 transition-colors">
+                         <Lock className="w-3 h-3" />
+                         Password
+                      </label>
+                     <input
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="••••••••"
+                        className="w-full bg-emerald-950/[0.03] border-b border-emerald-500/10 px-0 py-4 text-lg font-mono text-white focus:outline-none focus:border-emerald-500 transition-all placeholder:text-emerald-900"
+                     />
+                  </div>
+
+                  <div className="group space-y-2">
+                      <label className="flex items-center gap-2 text-[10px] uppercase tracking-[0.3em] font-bold text-slate-500 group-focus-within:text-emerald-500 transition-colors">
+                         <ShieldCheck className="w-3 h-3" />
+                         Confirm Password
+                      </label>
+                     <input
+                        type="password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        placeholder="••••••••"
+                        className="w-full bg-emerald-950/[0.03] border-b border-emerald-500/10 px-0 py-4 text-lg font-mono text-white focus:outline-none focus:border-emerald-500 transition-all placeholder:text-emerald-900"
+                     />
+                  </div>
+               </div>
+
+               {/* Actions */}
+               <button
+                  onClick={handleRegister}
+                  disabled={isLoading}
+                  className="w-full py-5 bg-emerald-600 text-black text-[12px] font-bold uppercase tracking-[0.5em] hover:bg-emerald-400 hover:shadow-[0_0_50px_rgba(16,185,129,0.3)] transition-all flex items-center justify-center gap-4 group rounded-sm"
+               >
+                   {isLoading ? <RefreshCcw className="w-5 h-5 animate-spin" /> : <UserPlus className="w-5 h-5 group-hover:scale-110 transition-transform" />}
+                   Create Account
+                </button>
             </div>
 
-            <div>
-              <label className="block text-sm text-gray-600 mb-2">Phone</label>
-              <input
-                type="tel"
-                value={phone}
-                onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                  setPhone(e.target.value)
-                }
-                placeholder="9876543210"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg
-                           bg-white text-black placeholder:text-gray-400
-                           caret-black
-                           focus:ring-2 focus:ring-black focus:border-black
-                           focus:outline-none transition"
-              />
+            {/* Footer */}
+            <div className="text-center pt-8 border-t border-emerald-500/5">
+                 <p className="text-[10px] tracking-widest text-slate-500 uppercase font-bold">
+                   Already have an account?{" "}
+                   <Link to="/login" className="text-emerald-500 hover:text-emerald-400 transition-colors ml-4 flex items-center justify-center gap-2 mt-4">
+                     Login <ArrowRight className="w-3 h-3" />
+                   </Link>
+                 </p>
             </div>
-
-            <div className="md:col-span-2">
-              <label className="block text-sm text-gray-600 mb-2">
-                Email Address
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                  setEmail(e.target.value)
-                }
-                placeholder="you@example.com"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg
-                           bg-white text-black placeholder:text-gray-400
-                           caret-black
-                           focus:ring-2 focus:ring-black focus:border-black
-                           focus:outline-none transition"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm text-gray-600 mb-2">
-                Password
-              </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                  setPassword(e.target.value)
-                }
-                placeholder="••••••••"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg
-                           bg-white text-black placeholder:text-gray-400
-                           caret-black
-                           focus:ring-2 focus:ring-black focus:border-black
-                           focus:outline-none transition"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm text-gray-600 mb-2">
-                Confirm Password
-              </label>
-              <input
-                type="password"
-                value={confirmPassword}
-                onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                  setConfirmPassword(e.target.value)
-                }
-                placeholder="••••••••"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg
-                           bg-white text-black placeholder:text-gray-400
-                           caret-black
-                           focus:ring-2 focus:ring-black focus:border-black
-                           focus:outline-none transition"
-              />
-            </div>
-          </div>
-
-          <button
-            onClick={registerHandler}
-            disabled={isLoading}
-            className="w-full mt-8 py-3 rounded-lg bg-black text-white font-medium tracking-wide transition-all duration-300 hover:bg-gray-800 active:scale-[0.98] shadow-md disabled:opacity-70"
-          >
-            {isLoading ? (
-              <PulseLoader size={8} color="#fff" />
-            ) : (
-              "Create Account"
-            )}
-          </button>
-
-          <div className="text-center mt-6 text-sm text-gray-500">
-            Already have an account?{" "}
-            <Link
-              to="/login"
-              className="text-black font-medium hover:text-yellow-600"
-            >
-              Sign In
-            </Link>
-          </div>
-        </div>
+         </div>
       </div>
+
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+        .font-serif { font-family: 'Playfair Display', serif; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        
+        .pentaluxe-google-btn button {
+           background-color: transparent !important;
+           border: 1px solid rgba(16, 185, 129, 0.1) !important;
+           color: #94a3b8 !important;
+           font-family: 'JetBrains Mono', monospace !important;
+           text-transform: uppercase !important;
+           letter-spacing: 0.2em !important;
+           font-size: 10px !important;
+           border-radius: 2px !important;
+           transition: all 0.3s !important;
+           width: 100% !important;
+           justify-content: center !important;
+        }
+
+        .pentaluxe-google-btn button:hover {
+           border-color: rgba(16, 185, 129, 0.4) !important;
+           color: white !important;
+           background-color: rgba(16, 185, 129, 0.05) !important;
+        }
+      `}</style>
     </div>
   );
 };
