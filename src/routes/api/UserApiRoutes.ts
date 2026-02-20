@@ -1,7 +1,8 @@
 export const USER_API_ROUTES = {
   PRODUCTS: {
     GET: "/user/products",
-    GET_RELATED_PRODUCTS: "/user/related-products",
+    GET_RELATED_PRODUCTS: (categoryName: string) =>
+      `/user/related-products?categoryName=${categoryName}`,
     GET_BY_ID: (productId: string) => `/user/products/${productId}`,
     SEARCH_BY_CATEGORY: "/user/search-products-by-category",
   },

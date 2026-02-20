@@ -26,9 +26,9 @@ export const ProductService = {
     }
   },
 
-  getRelatedProducts: async (params?: Record<string, string | number | boolean | undefined>) => {
+  getRelatedProducts: async (categoryName:string) => {
     try {
-      const res = await api.get(USER_API_ROUTES.PRODUCTS.GET_RELATED_PRODUCTS, { params });
+      const res = await api.get(USER_API_ROUTES.PRODUCTS.GET_RELATED_PRODUCTS(categoryName) );
       return res.data;
     } catch (error) {
       const parsedError = parseAxiosError(error, "Failed to fetch related products");
