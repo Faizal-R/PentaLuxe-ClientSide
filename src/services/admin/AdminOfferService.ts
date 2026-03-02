@@ -17,11 +17,17 @@ export const AdminOfferService = {
 
   updateProductOffer: async (offerData: Record<string, unknown>) => {
     try {
-      const res = await api.patch(ADMIN_API_ROUTES.OFFERS_MANAGEMENT.UPDATE_PRODUCT_OFFER, offerData);
+      const res = await api.patch(
+        ADMIN_API_ROUTES.OFFERS_MANAGEMENT.UPDATE_PRODUCT_OFFER,
+        offerData,
+      );
       successToast(res.data.message || "Product offer updated successfully");
       return res.data;
     } catch (error) {
-      const parsedError = parseAxiosError(error, "Failed to update product offer");
+      const parsedError = parseAxiosError(
+        error,
+        "Failed to update product offer",
+      );
       errorToast(parsedError.message);
       return parsedError;
     }
@@ -29,13 +35,48 @@ export const AdminOfferService = {
 
   updateCategoryOffer: async (offerData: Record<string, unknown>) => {
     try {
-      const res = await api.patch(ADMIN_API_ROUTES.OFFERS_MANAGEMENT.UPDATE_CATEGORY_OFFER, offerData);
+      const res = await api.patch(
+        ADMIN_API_ROUTES.OFFERS_MANAGEMENT.UPDATE_CATEGORY_OFFER,
+        offerData,
+      );
       successToast(res.data.message || "Category offer updated successfully");
       return res.data;
     } catch (error) {
-      const parsedError = parseAxiosError(error, "Failed to update category offer");
+      const parsedError = parseAxiosError(
+        error,
+        "Failed to update category offer",
+      );
       errorToast(parsedError.message);
       return parsedError;
     }
-  }
+  },
+
+  deleteOffer: async (offerId: string) => {
+    try {
+      const res = await api.delete(
+        ADMIN_API_ROUTES.OFFERS_MANAGEMENT.REMOVE(offerId),
+      );
+      successToast(res.data.message || "Offer deleted successfully");
+      return res.data;
+    } catch (error) {
+      const parsedError = parseAxiosError(error, "Failed to delete offer");
+      errorToast(parsedError.message);
+      return parsedError;
+    }
+  },
+
+  editOffer: async (offerId: string, DiscountPercentage: number) => {
+    try {
+      const res = await api.put(
+        ADMIN_API_ROUTES.OFFERS_MANAGEMENT.UPDATE(offerId),
+        { DiscountPercentage },
+      );
+      successToast(res.data.message || "Offer updated successfully");
+      return res.data;
+    } catch (error) {
+      const parsedError = parseAxiosError(error, "Failed to update offer");
+      errorToast(parsedError.message);
+      return parsedError;
+    }
+  },
 };

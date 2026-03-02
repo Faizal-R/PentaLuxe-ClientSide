@@ -17,7 +17,9 @@ export const AdminCouponService = {
 
   createCoupon: async (couponData: any) => {
     try {
-      const res = await api.post(ADMIN_API_ROUTES.COUPONS_MANAGEMENT.CREATE, { couponData });
+      const res = await api.post(ADMIN_API_ROUTES.COUPONS_MANAGEMENT.CREATE, {
+        couponData,
+      });
       successToast(res.data.message || "Coupon created successfully");
       return res.data;
     } catch (error) {
@@ -29,7 +31,9 @@ export const AdminCouponService = {
 
   deleteCoupon: async (couponId: string) => {
     try {
-      const res = await api.delete(ADMIN_API_ROUTES.COUPONS_MANAGEMENT.REMOVE(couponId));
+      const res = await api.delete(
+        ADMIN_API_ROUTES.COUPONS_MANAGEMENT.REMOVE(couponId),
+      );
       successToast(res.data.message || "Coupon deleted successfully");
       return res.data;
     } catch (error) {
@@ -37,5 +41,20 @@ export const AdminCouponService = {
       errorToast(parsedError.message);
       return parsedError;
     }
-  }
+  },
+
+  updateCoupon: async (couponId: string, couponData: any) => {
+    try {
+      const res = await api.put(
+        ADMIN_API_ROUTES.COUPONS_MANAGEMENT.UPDATE(couponId),
+        { couponData },
+      );
+      successToast(res.data.message || "Coupon updated successfully");
+      return res.data;
+    } catch (error) {
+      const parsedError = parseAxiosError(error, "Failed to update coupon");
+      errorToast(parsedError.message);
+      return parsedError;
+    }
+  },
 };

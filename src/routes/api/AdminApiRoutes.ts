@@ -34,11 +34,14 @@ export const ADMIN_API_ROUTES = {
     UPDATE_PRODUCT_OFFER: "/admin/product-offer",
     UPDATE_CATEGORY_OFFER: "/admin/category-offer",
     GET_ALL: "/admin/offers",
+    REMOVE: (offerId: string) => `/admin/offers/${offerId}`,
+    UPDATE: (offerId: string) => `/admin/offers/${offerId}`,
   },
   COUPONS_MANAGEMENT: {
     REMOVE: (couponId: string) => `/admin/coupon/${couponId}`,
     CREATE: "/admin/coupon",
     GET: "/admin/coupon",
+    UPDATE: (couponId: string) => `/admin/coupon/${couponId}`,
   },
   SALES_REPORT: {
     GET_ALL: "/admin/sales-report",

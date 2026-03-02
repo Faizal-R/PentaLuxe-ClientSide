@@ -11,7 +11,8 @@ import {
   Calendar, 
   Zap, 
   ShoppingBag, 
-  ShieldCheck
+  ShieldCheck,
+  Edit2
 } from "lucide-react";
 
 export interface ICoupon {
@@ -27,6 +28,7 @@ const CouponManagement: React.FC = () => {
   const [modalStatus, setModalStatus] = useState(false);
   const [coupons, setCoupons] = useState<ICoupon[]>([]);
   const [displayCoupons, setDispalyCoupons] = useState<ICoupon[]>([]);
+  const [editingCoupon, setEditingCoupon] = useState<ICoupon | null>(null);
 
   const removeCoupon = async (couponId: string) => {
     const res = await AdminCouponService.deleteCoupon(couponId);
@@ -36,13 +38,23 @@ const CouponManagement: React.FC = () => {
     }
   };
 
-  const CreateCouponEntry = async (couponData: ICoupon) => {
-    const res = await AdminCouponService.createCoupon(couponData);
-    if (res.success) {
-      const coupon = res.data;
-      setModalStatus(false);
-      setCoupons((prev) => [...prev, coupon]);
-      successToast("Voucher protocol established.");
+  const handleCouponData = async (couponData: ICoupon) => {
+    if (editingCoupon) {
+      const res = await AdminCouponService.updateCoupon(editingCoupon._id!, couponData);
+      if (res.success) {
+        setCoupons(coupons.map(c => c._id === editingCoupon._id ? res.data : c));
+        setModalStatus(false);
+        setEditingCoupon(null);
+        successToast("Voucher configuration updated.");
+      }
+    } else {
+      const res = await AdminCouponService.createCoupon(couponData);
+      if (res.success) {
+        const coupon = res.data;
+        setModalStatus(false);
+        setCoupons((prev) => [...prev, coupon]);
+        successToast("Voucher protocol established.");
+      }
     }
   };
 
@@ -72,7 +84,10 @@ const CouponManagement: React.FC = () => {
         </div>
 
         <button
-          onClick={() => setModalStatus(true)}
+          onClick={() => {
+            setEditingCoupon(null);
+            setModalStatus(true);
+          }}
           className="flex items-center gap-3 px-8 py-4 bg-emerald-500 text-black text-[11px] font-bold uppercase tracking-widest rounded-2xl hover:bg-emerald-400 hover:shadow-[0_0_30px_rgba(16,185,129,0.3)] transition-all active:scale-95"
         >
           <Plus size={16} />
@@ -83,7 +98,8 @@ const CouponManagement: React.FC = () => {
       <CouponModal
         isModalOpen={modalStatus}
         setIsModalOpen={setModalStatus}
-        handleCouponData={CreateCouponEntry}
+        handleCouponData={handleCouponData}
+        initialData={editingCoupon}
       />
 
       {/* Vouchers Grid */}
@@ -133,12 +149,23 @@ const CouponManagement: React.FC = () => {
                    </div>
                 </td>
                 <td className="px-8 py-6 text-right">
-                   <button
-                     onClick={() => removeCoupon(coupon._id ?? "")}
-                     className="p-3 rounded-xl bg-white/5 border border-white/10 text-slate-400 hover:text-red-500 hover:border-red-500/30 transition-all hover:scale-110"
-                   >
-                     <Trash2 size={16} />
-                   </button>
+                   <div className="flex justify-end gap-2">
+                      <button
+                        onClick={() => {
+                          setEditingCoupon(coupon);
+                          setModalStatus(true);
+                        }}
+                        className="p-3 rounded-xl bg-white/5 border border-white/10 text-slate-400 hover:text-emerald-500 hover:border-emerald-500/30 transition-all hover:scale-110"
+                      >
+                        <Edit2 size={16} />
+                      </button>
+                      <button
+                        onClick={() => removeCoupon(coupon._id ?? "")}
+                        className="p-3 rounded-xl bg-white/5 border border-white/10 text-slate-400 hover:text-red-500 hover:border-red-500/30 transition-all hover:scale-110"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                   </div>
                 </td>
               </tr>
             ))}

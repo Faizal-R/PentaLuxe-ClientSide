@@ -6,6 +6,7 @@ interface ICouponModalProps {
   isModalOpen: boolean; // To indicate if the modal is open
   setIsModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
   handleCouponData: (couponData: ICoupon) => void; // Function to update modal status
+  initialData?: ICoupon | null;
 }
 ReactModal.setAppElement("#root"); // Ensure modal accessibility
 
@@ -13,6 +14,7 @@ const CouponModal = ({
   isModalOpen,
   setIsModalOpen,
   handleCouponData,
+  initialData,
 }: ICouponModalProps) => {
   const [couponName, setCouponName] = useState("");
   const [expiryDate, setExpiryDate] = useState("");
@@ -23,6 +25,26 @@ const CouponModal = ({
   const [minimumPurchasePrice, setMinimumPurchasePrice] = useState<
     number | string
   >("");
+
+  React.useEffect(() => {
+    if (initialData) {
+      setCouponName(initialData.couponName);
+      // Format date for input[type="date"]
+      const date = new Date(initialData.expiryDate);
+      const formattedDate = date.toISOString().split("T")[0];
+      setExpiryDate(formattedDate);
+      setMaxDiscountPrice(initialData.maxDiscountPrice.toString());
+      setDiscountPercentage(initialData.discountPercentage.toString());
+      setMinimumPurchasePrice(initialData.minimumPurchasePrice.toString());
+    } else {
+      setCouponName("");
+      setExpiryDate("");
+      setMaxDiscountPrice("");
+      setDiscountPercentage("");
+      setMinimumPurchasePrice("");
+    }
+  }, [initialData, isModalOpen]);
+
   const closeModal = () => {
     setIsModalOpen(false);
   };
@@ -40,7 +62,7 @@ const CouponModal = ({
     // Check if expiry date is greater than current date
     const currentDate = new Date();
     const selectedExpiryDate = new Date(expiryDate);
-    if (selectedExpiryDate <= currentDate) {
+    if (!initialData && selectedExpiryDate <= currentDate) {
       errorToast("Expiry date should be greater than the current date.");
       return;
     }
@@ -62,7 +84,8 @@ const CouponModal = ({
       return;
     }
     const DataToSend = {
-     couponName: couponName.toUpperCase(),
+      ...initialData,
+      couponName: couponName.toUpperCase(),
       expiryDate,
       maxDiscountPrice,
       discountPercentage,
@@ -71,18 +94,20 @@ const CouponModal = ({
 
     handleCouponData(DataToSend);
 
-    setCouponName("");
-    setExpiryDate("");
-    setMaxDiscountPrice("");
-    setDiscountPercentage("");
-    setMinimumPurchasePrice("");
+    if (!initialData) {
+      setCouponName("");
+      setExpiryDate("");
+      setMaxDiscountPrice("");
+      setDiscountPercentage("");
+      setMinimumPurchasePrice("");
+    }
   };
 
   return (
     <ReactModal
       isOpen={isModalOpen}
       onRequestClose={closeModal}
-      contentLabel="Create New Coupon"
+      contentLabel={initialData ? "Edit Coupon" : "Create New Coupon"}
       style={{
         content: {
           width: "500px",
@@ -95,7 +120,9 @@ const CouponModal = ({
         },
       }}
     >
-      <h3 className="text-xl font-semibold mb-4">Create a New Coupon</h3>
+      <h3 className="text-xl font-semibold mb-4">
+        {initialData ? "Edit Coupon" : "Create a New Coupon"}
+      </h3>
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -153,7 +180,7 @@ const CouponModal = ({
             type="submit"
             className="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600 mr-2"
           >
-            Add Coupon
+            {initialData ? "Update Coupon" : "Add Coupon"}
           </button>
           <button
             type="button"
