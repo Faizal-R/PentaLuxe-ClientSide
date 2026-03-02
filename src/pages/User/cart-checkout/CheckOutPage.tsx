@@ -147,13 +147,13 @@ const CheckOutPage = () => {
   };
 
   const handleRazorpay = async (orderDetails: any) => {
-    const keyRes = await CheckoutService.getRazorpayKey();
+    const {key} = await CheckoutService.getRazorpayKey();
     const orderRes = await CheckoutService.createRazorpayOrder(totalPrice);
-
-    if (!keyRes.success || !orderRes.success) return;
+    // console.log(keyRes,orderRes)
+    // if (!keyRes.success || !orderRes.success) return;
 
     const options = {
-      key: keyRes.data.key,
+      key: key,
       amount: orderRes.data.amount,
       currency: "INR",
       name: "PentaLuxe Premium",
