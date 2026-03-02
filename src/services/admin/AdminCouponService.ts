@@ -2,6 +2,7 @@ import api from "@/config/api";
 import { ADMIN_API_ROUTES } from "@/routes/api/AdminApiRoutes";
 import { parseAxiosError } from "@/utils/parseAxiosError";
 import { errorToast, successToast } from "@/utils/customToast";
+import { ICoupon } from "@/pages/Admin/managements/AdminCouponManagementPage";
 
 export const AdminCouponService = {
   getAllCoupons: async () => {
@@ -15,7 +16,7 @@ export const AdminCouponService = {
     }
   },
 
-  createCoupon: async (couponData: any) => {
+  createCoupon: async (couponData: ICoupon) => {
     try {
       const res = await api.post(ADMIN_API_ROUTES.COUPONS_MANAGEMENT.CREATE, {
         couponData,
@@ -43,7 +44,7 @@ export const AdminCouponService = {
     }
   },
 
-  updateCoupon: async (couponId: string, couponData: any) => {
+  updateCoupon: async (couponId: string, couponData: ICoupon) => {
     try {
       const res = await api.put(
         ADMIN_API_ROUTES.COUPONS_MANAGEMENT.UPDATE(couponId),

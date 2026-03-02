@@ -209,13 +209,11 @@ const AdminProductsPage = () => {
 
       {/* Numerical Navigation */}
       <div className="flex justify-center pt-8">
-        <div className="bg-white/5 backdrop-blur-3xl border border-white/5 px-6 py-4 rounded-[32px] shadow-2xl">
-           <Pagination
-             items={searchedProducts.length > 0 ? searchedProducts : products}
-             itemsPerPage={itemsPerPage}
-             onPageChange={handlePagination}
-           />
-        </div>
+         <Pagination
+           items={searchedProducts.length > 0 ? searchedProducts : products}
+           itemsPerPage={itemsPerPage}
+           onPageChange={handlePagination}
+         />
       </div>
     </div>
   );

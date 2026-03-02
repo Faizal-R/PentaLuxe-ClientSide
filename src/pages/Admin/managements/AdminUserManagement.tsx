@@ -217,13 +217,11 @@ const AdminUserManagement = () => {
       </div>
 
       <div className="flex justify-center pt-8">
-        <div className="bg-white/5 backdrop-blur-3xl border border-white/5 px-6 py-4 rounded-[32px]">
-           <Pagination 
-             items={input.length > 0 ? searchedUsers : users} 
-             itemsPerPage={8} 
-             onPageChange={handlePagination}
-           />
-        </div>
+         <Pagination 
+           items={input.length > 0 ? searchedUsers : users} 
+           itemsPerPage={8} 
+           onPageChange={handlePagination}
+         />
       </div>
     </div>
   );

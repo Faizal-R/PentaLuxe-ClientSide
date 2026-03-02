@@ -184,13 +184,11 @@ const CouponManagement: React.FC = () => {
       </div>
 
       <div className="flex justify-center pt-8">
-        <div className="bg-white/5 backdrop-blur-3xl border border-white/5 px-6 py-4 rounded-[32px]">
-           <Pagination
-             items={coupons}
-             itemsPerPage={5}
-             onPageChange={handlePagination}
-           />
-        </div>
+         <Pagination
+           items={coupons}
+           itemsPerPage={5}
+           onPageChange={handlePagination}
+         />
       </div>
     </div>
   );

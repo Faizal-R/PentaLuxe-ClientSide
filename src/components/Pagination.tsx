@@ -23,7 +23,7 @@ const Pagination = <T,>({
       const currentPageItems = items.slice(startIndex, endIndex);
       onPageChange(currentPageItems);
     }
-  }, [currentPage, items, itemsPerPage]);
+  }, [currentPage, items, itemsPerPage, onPageChange]);
 
   const handlePageChange = (page: number) => {
     if (page >= 1 && page <= totalPages) {
@@ -32,7 +32,7 @@ const Pagination = <T,>({
     }
   };
 
-  if (totalPages <= 1) return null;
+  if (!items || items.length === 0) return null;
 
   return (
     <div className="flex flex-col items-center gap-6 mt-12 py-10 border-t border-emerald-500/5">

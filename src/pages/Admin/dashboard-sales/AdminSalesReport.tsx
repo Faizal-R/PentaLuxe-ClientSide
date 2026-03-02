@@ -199,206 +199,192 @@ const AdminSalesReport = () => {
   }, [getAllSalesReport]);
 
   return (
-    <div className="p-8 bg-white min-h-screen text-gray-700">
-      <h1 className="text-4xl font-semibold text-gray-800 mb-6">
-        Sales Report
-      </h1>
-
-      {/* Sales Report Filters */}
-      <div className="mb-4 flex flex-col md:flex-row md:items-center md:justify-between bg-gray-50 border border-gray-200 rounded-lg p-4 shadow-sm">
-        <div className="flex flex-col md:flex-row md:items-center mb-2 md:mb-0">
-          <label htmlFor="date-range" className="mr-2 text-lg font-medium">
-            Select Date Range:
-          </label>
-          <select
-            value={dateRange}
-            onChange={(e) => setDateRange(e.target.value)}
-            id="date-range"
-            className="p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-gray-400 transition duration-200"
-          >
-            <option value="full-report">Full Report</option>
-            <option value="daily">Daily</option>
-            <option value="weekly">Weekly</option>
-            <option value="monthly">Monthly</option>
-            <option value="yearly">Yearly</option>
-            <option value="custom">Custom Date Range</option>
-          </select>
+    <div className="space-y-8 pb-12">
+      {/* Header Area */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 border-b border-emerald-500/10 pb-8">
+        <div className="space-y-1">
+          <div className="flex items-center gap-3">
+             <div className="w-8 h-[1px] bg-emerald-500" />
+             <span className="text-emerald-500 tracking-[0.4em] uppercase text-[9px] font-bold">Financial Oversight</span>
+          </div>
+          <h1 className="text-4xl md:text-5xl font-serif text-white tracking-tighter">Sales Intelligence</h1>
         </div>
 
-        {/* Custom Date Inputs */}
-        {dateRange === "custom" && (
-          <div className="hidden custom-dates md:flex items-center">
-            <label htmlFor="start-date" className="mr-2 font-medium">
-              Start Date:
-            </label>
-            <input
-              type="date"
-              value={customDates.startDate}
-              onChange={(e) =>
-                setCustomDates((prev) => ({
-                  ...prev,
-                  startDate: e.target.value,
-                }))
-              }
-              id="start-date"
-              className="p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-gray-400"
-            />
+        <div className="flex flex-wrap items-center gap-4 bg-white/5 p-2 rounded-2xl border border-white/5 backdrop-blur-xl">
+           <div className="flex items-center gap-3 pl-2">
+             <span className="text-[10px] uppercase tracking-widest font-bold text-slate-500">Frequency:</span>
+             <select
+               value={dateRange}
+               onChange={(e) => setDateRange(e.target.value)}
+               className="bg-[#0c1110] text-emerald-500 text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded-xl border border-emerald-500/20 focus:outline-none focus:border-emerald-500 transition-colors cursor-pointer"
+             >
+               <option value="full-report">Full Spectrum</option>
+               <option value="daily">Daily Arc</option>
+               <option value="weekly">Weekly Cycle</option>
+               <option value="monthly">Lunar Phase</option>
+               <option value="yearly">Solar Year</option>
+               <option value="custom">Manual Scope</option>
+             </select>
+           </div>
+           
+           {dateRange === "custom" && (
+             <div className="flex items-center gap-2 px-2 border-l border-white/10">
+               <input
+                 type="date"
+                 value={customDates.startDate}
+                 onChange={(e) => setCustomDates(p => ({ ...p, startDate: e.target.value }))}
+                 className="bg-transparent text-[10px] text-white font-mono uppercase focus:outline-none"
+               />
+               <span className="text-slate-600">/</span>
+               <input
+                 type="date"
+                 value={customDates.endDate}
+                 onChange={(e) => setCustomDates(p => ({ ...p, endDate: e.target.value }))}
+                 className="bg-transparent text-[10px] text-white font-mono uppercase focus:outline-none"
+               />
+             </div>
+           )}
 
-            <label htmlFor="end-date" className="mx-2 font-medium">
-              End Date:
-            </label>
-            <input
-              value={customDates.endDate}
-              onChange={(e) =>
-                setCustomDates((prev) => ({ ...prev, endDate: e.target.value }))
-              }
-              type="date"
-              id="end-date"
-              className="p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-gray-400"
-            />
-          </div>
-        )}
-
-        {/* Generate Report Button */}
-        <button
-          onClick={generateSalesReport}
-          className="mt-2 md:mt-0 bg-gray-800 text-white py-2 px-4 rounded-md shadow-md hover:bg-gray-700 transition duration-200"
-        >
-          Generate Sales Report
-        </button>
-      </div>
-
-      {/* Sales Summary */}
-      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6 shadow-sm">
-        <h2 className="text-2xl font-semibold text-gray-800 mb-4">
-          Sales Summary
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="p-4 bg-white border border-gray-200 rounded-lg shadow-sm">
-            <strong className="text-lg">Overall Sales Count:</strong>{" "}
-            <span id="overall-sales-count" className="text-gray-700 font-bold">
-              {salesCount}
-            </span>
-          </div>
-          <div className="p-4 bg-white border border-gray-200 rounded-lg shadow-sm">
-            <strong className="text-lg">Overall Order Amount:</strong>{" "}
-            <span id="overall-order-amount" className="text-gray-700 font-bold">
-              ₹{totalOrderAmount.toFixed(0)}
-            </span>
-          </div>
-          <div className="p-4 bg-white border border-gray-200 rounded-lg shadow-sm">
-            <strong className="text-lg">Overall Discounts:</strong>{" "}
-            <span id="overall-discount" className="text-gray-700 font-bold">
-              ₹{totalDiscount.toFixed(2)}
-            </span>
-          </div>
+           <button
+             onClick={generateSalesReport}
+             className="px-6 py-2 bg-emerald-500 text-black text-[10px] font-bold uppercase tracking-widest rounded-xl hover:bg-white transition-all shadow-lg active:scale-95"
+           >
+             Execute
+           </button>
         </div>
       </div>
 
-      {/* Sales Report Table */}
-      <div className="overflow-x-auto bg-white border border-gray-200 rounded-lg shadow-sm mb-6">
-        <table className="min-w-full divide-y divide-gray-300">
-          <thead className="bg-gray-50">
-            <tr className="text-center">
-              <th className="px-6 py-3 text-xs font-medium text-gray-600 uppercase tracking-wider">
-                Order ID
-              </th>
-              <th className="px-6 py-3 text-xs font-medium text-gray-600 uppercase tracking-wider">
-                Customer Name
-              </th>
-              <th className="px-6 py-3 text-xs font-medium text-gray-600 uppercase tracking-wider">
-                Order Amount
-              </th>
-              <th className="px-6 py-3 text-xs font-medium text-gray-600 uppercase tracking-wider">
-                Payment
-              </th>
-              <th className="px-6 py-3 text-xs font-medium text-gray-600 uppercase tracking-wider">
-                Coupons
-              </th>
-              <th className="px-6 py-3 text-xs font-medium text-gray-600 uppercase tracking-wider">
-                Order Date
-              </th>
-              <th className="px-6 py-3 text-xs font-medium text-gray-600 uppercase tracking-wider">
-                Status
-              </th>
-            </tr>
-          </thead>
+      {/* KPI Dashboard */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="relative group overflow-hidden bg-gradient-to-br from-[#0c1110] to-black border border-white/5 rounded-[32px] p-8 shadow-2xl transition-all duration-500 hover:border-emerald-500/20">
+           <div className="flex items-center justify-between mb-8">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500">
+                 <PulseLoader size={2} color="#10b981" />
+              </div>
+              <span className="text-[10px] uppercase tracking-widest font-bold text-slate-500">Unit Volume</span>
+           </div>
+           <p className="text-4xl font-mono font-bold text-white tracking-tighter">{salesCount}</p>
+           <p className="text-[8px] uppercase tracking-widest text-emerald-500/60 font-bold mt-2">Total Executed Orders</p>
+        </div>
 
-          <tbody className="bg-white divide-y divide-gray-200">
-            {loading ? (
-              <tr className="text-center">
-                <td colSpan={7} className="text-center px-6 py-4 text-gray-600">
-                  <p>
-                    <PulseLoader />
-                  </p>
-                </td>
+        <div className="relative group overflow-hidden bg-gradient-to-br from-[#0c1110] to-black border border-white/5 rounded-[32px] p-8 shadow-2xl transition-all duration-500 hover:border-emerald-500/20">
+           <div className="flex items-center justify-between mb-8">
+              <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-500">
+                 <PulseLoader size={2} color="#3b82f6" />
+              </div>
+              <span className="text-[10px] uppercase tracking-widest font-bold text-slate-500">Gross Yield</span>
+           </div>
+           <p className="text-4xl font-mono font-bold text-white tracking-tighter">₹{totalOrderAmount.toLocaleString()}</p>
+           <p className="text-[8px] uppercase tracking-widest text-blue-500/60 font-bold mt-2">Aggregate Value Post-Deduction</p>
+        </div>
+
+        <div className="relative group overflow-hidden bg-gradient-to-br from-[#0c1110] to-black border border-white/5 rounded-[32px] p-8 shadow-2xl transition-all duration-500 hover:border-orange-500/20">
+           <div className="flex items-center justify-between mb-8">
+              <div className="w-10 h-10 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-500">
+                 <PulseLoader size={2} color="#f97316" />
+              </div>
+              <span className="text-[10px] uppercase tracking-widest font-bold text-slate-500">Incentive Loss</span>
+           </div>
+           <p className="text-4xl font-mono font-bold text-white tracking-tighter">₹{totalDiscount.toLocaleString()}</p>
+           <p className="text-[8px] uppercase tracking-widest text-orange-500/60 font-bold mt-2">Total Promotional Variance</p>
+        </div>
+      </div>
+
+      {/* Data Manifest */}
+      <div className="bg-white/5 backdrop-blur-3xl border border-white/5 rounded-[40px] overflow-hidden shadow-2xl">
+        <div className="p-8 border-b border-white/5 flex justify-between items-center bg-white/[0.01]">
+           <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500">
+                 <PulseLoader size={2} color="#10b981" />
+              </div>
+              <h2 className="text-xl font-serif text-white tracking-tight">Financial Registry</h2>
+           </div>
+           
+           <div className="flex gap-3">
+              <button 
+                onClick={downloadPDF}
+                className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-[9px] font-bold uppercase tracking-widest text-slate-400 hover:text-white hover:bg-white/10 transition-all"
+              >
+                PDF Export
+              </button>
+              <button 
+                onClick={downloadExcel}
+                className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-[9px] font-bold uppercase tracking-widest text-slate-400 hover:text-white hover:bg-white/10 transition-all"
+              >
+                Excel Export
+              </button>
+           </div>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="bg-white/[0.02] border-b border-white/5">
+                <th className="px-8 py-5 text-left text-[9px] font-bold text-emerald-500/60 uppercase tracking-[0.3em]">Signature</th>
+                <th className="px-8 py-5 text-left text-[9px] font-bold text-emerald-500/60 uppercase tracking-[0.3em]">Operative</th>
+                <th className="px-8 py-5 text-left text-[9px] font-bold text-emerald-500/60 uppercase tracking-[0.3em]">Yield</th>
+                <th className="px-8 py-5 text-left text-[9px] font-bold text-emerald-500/60 uppercase tracking-[0.3em]">Protocol</th>
+                <th className="px-8 py-5 text-left text-[9px] font-bold text-emerald-500/60 uppercase tracking-[0.3em]">Incentive</th>
+                <th className="px-8 py-5 text-left text-[9px] font-bold text-emerald-500/60 uppercase tracking-[0.3em]">Timeline</th>
+                <th className="px-8 py-5 text-right text-[9px] font-bold text-emerald-500/60 uppercase tracking-[0.3em]">State</th>
               </tr>
-            ) : salesReportData?.length === 0 || !salesReportData ? (
-              <tr>
-                <td colSpan={7} className="text-center px-6 py-4 text-gray-600">
-                  No Report Found On that Particular Date Range
-                </td>
-              </tr>
-            ) : (
-              (displaySalesReportData.length > 0
-                ? displaySalesReportData
-                : salesReportData
-              ).map((order) => (
-                <tr key={order._id} className="text-center">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 text-center font-bold">
-                    {order._id}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 text-center">
-                    {order.user?.username.toUpperCase()}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 text-center">
-                    {order.totalAmount.toFixed(0)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 text-center">
-                    {order.paymentMethod.toUpperCase()}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 text-center">
-                    {order.couponDiscount > 0
-                      ? order.couponDiscount.toFixed(2)
-                      : "No Coupon"}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 text-center">
-                    {new Date(order.orderDate).toDateString()}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 text-center">
-                    {order.status}
+            </thead>
+            <tbody className="divide-y divide-white/[0.03]">
+              {loading ? (
+                <tr>
+                  <td colSpan={7} className="px-8 py-20 text-center">
+                    <PulseLoader color="#10b981" />
+                    <p className="text-[9px] uppercase tracking-widest text-emerald-500/40 font-bold mt-4">Retrieving Data Stream...</p>
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-      <Pagination
-        itemsPerPage={5}
-        items={salesReportData!}
-        onPageChange={handlePagination}
-      />
-
-      {/* Report Download Options */}
-      <div className="flex justify-end mb-6 items-center">
-        <div className="mr-4">
-          <h3 className="font-medium text-gray-800 text-lg">
-            Download Report:
-          </h3>
+              ) : salesReportData?.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="px-8 py-20 text-center opacity-20">
+                    <p className="text-[11px] uppercase tracking-[0.4em] font-bold">No variance detected in registry</p>
+                  </td>
+                </tr>
+              ) : (
+                (displaySalesReportData.length > 0 ? displaySalesReportData : salesReportData).map((order) => (
+                  <tr key={order._id} className="group hover:bg-emerald-500/[0.02] transition-all duration-500">
+                    <td className="px-8 py-6">
+                       <p className="text-[11px] font-mono text-slate-500 font-bold uppercase tracking-tighter group-hover:text-emerald-500 transition-colors">#{order._id.slice(-8)}</p>
+                    </td>
+                    <td className="px-8 py-6">
+                       <p className="text-[12px] font-bold text-white uppercase tracking-widest">{order.user?.username}</p>
+                    </td>
+                    <td className="px-8 py-6">
+                       <p className="text-[14px] font-serif text-emerald-500 tracking-tighter">₹{order.totalAmount.toFixed(0)}</p>
+                    </td>
+                    <td className="px-8 py-6">
+                       <span className="text-[10px] font-mono text-slate-500 uppercase">{order.paymentMethod}</span>
+                    </td>
+                    <td className="px-8 py-6">
+                       <span className={`text-[10px] font-bold uppercase tracking-widest ${order.couponDiscount > 0 ? 'text-emerald-500/60' : 'text-slate-700 font-normal italic'}`}>
+                          {order.couponDiscount > 0 ? `-₹${order.couponDiscount.toFixed(0)}` : "None"}
+                       </span>
+                    </td>
+                    <td className="px-8 py-6">
+                       <span className="text-[10px] font-mono text-slate-500 uppercase">{new Date(order.orderDate).toLocaleDateString()}</span>
+                    </td>
+                    <td className="px-8 py-6 text-right">
+                       <span className={`inline-flex px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest border ${order.status === 'Delivered' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500' : 'bg-orange-500/10 border-orange-500/20 text-orange-400'}`}>
+                          {order.status}
+                       </span>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
-        <button
-          onClick={downloadPDF}
-          className="bg-gray-700 text-white py-2 px-4 rounded-md shadow-md hover:bg-gray-600 transition duration-200 mr-2"
-        >
-          Download PDF
-        </button>
-        <button
-          onClick={downloadExcel}
-          className="bg-gray-700 text-white py-2 px-4 rounded-md shadow-md hover:bg-gray-600 transition duration-200"
-        >
-          Download Excel
-        </button>
+      </div>
+
+      <div className="flex justify-center pt-8">
+        <Pagination
+          itemsPerPage={5}
+          items={salesReportData!}
+          onPageChange={handlePagination}
+        />
       </div>
     </div>
   );
