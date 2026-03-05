@@ -8,8 +8,10 @@ interface IInputProps {
 }
 
 const Input: React.FC<IInputProps> = ({ text, type, inputHandler, value }) => {
+    const formattedLabel = text === 'FlatNumberOrBuildingName' ? text.split('Or').join(' / ') : text;
+
     return (
-        <div className="relative">
+        <div className="relative group flex-grow min-w-[300px]">
             <input
                 value={value}
                 onChange={inputHandler}
@@ -17,15 +19,21 @@ const Input: React.FC<IInputProps> = ({ text, type, inputHandler, value }) => {
                 type={type}
                 name={text}
                 autoComplete="off"
-                className="border border-gray-400 bg-transparent p-4 text-gray-400 font-semibold text-lg w-[400px] transition-colors duration-150 ease-in-out focus:outline-none focus:border-blue-600 peer"
+                className="w-full bg-emerald-950/20 border border-emerald-500/10 p-5 pt-8 pb-3 text-white font-mono text-sm tracking-widest transition-all duration-500 focus:outline-none focus:border-emerald-500/40 focus:bg-emerald-500/[0.03] peer rounded-xl placeholder-transparent"
+                placeholder={formattedLabel}
             />
             <label
-                className={`absolute left-4 text-gray-500 pointer-events-none transition-all duration-200 ease-in-out transform ${
-                    value ? 'translate-y-[-.2rem] scale-75 px-1 text-blue-500' : 'translate-y-4 text-gray-700'
-                } peer-focus:translate-y-[-.2rem] peer-focus:scale-75 peer-focus:px-1 peer-focus:text-blue-500`}
+                className={`absolute left-5 pointer-events-none transition-all duration-500 ease-in-out uppercase font-bold tracking-[0.3em] overflow-hidden whitespace-nowrap max-w-[calc(100%-40px)] ${
+                    value 
+                    ? 'top-2 text-[8px] text-emerald-500 translate-y-0 opacity-60' 
+                    : 'top-1/2 -translate-y-1/2 text-[10px] text-slate-500 opacity-40'
+                } peer-focus:top-2 peer-focus:text-[8px] peer-focus:text-emerald-500 peer-focus:translate-y-0 peer-focus:opacity-60`}
             >
-                {text === 'FlatNumberOrBuildingName' ? text.split('Or').join('/') : text}
+                {formattedLabel}
             </label>
+            
+            {/* Focus Decoration */}
+            <div className="absolute bottom-0 left-0 h-[1px] w-0 bg-emerald-500/40 transition-all duration-700 peer-focus:w-full group-hover:w-1/4" />
         </div>
     );
 };

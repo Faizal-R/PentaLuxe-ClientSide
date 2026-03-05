@@ -23,7 +23,7 @@ const CategoryPage = () => {
       const fetchResult = res.data;
       setProducts(fetchResult);
       if (fetchResult.length > 0) {
-        setCategoryName(fetchResult[0].CategoryId.categoryName);
+        setCategoryName(fetchResult[0].CategoryId?.categoryName || "Premium");
       }
     }
     setIsLoading(false);

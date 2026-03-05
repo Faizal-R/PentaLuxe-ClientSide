@@ -30,6 +30,12 @@ const ProductDetailPage = () => {
   const [relatedProducts, setRelatedProducts] = useState<IProduct[]>([]);
   const [discountPrice, setDiscountPrice] = useState(0);
 
+  const fetchRelatedProducts = useCallback(async (categoryName: string) => {
+    if (!id) return;
+    const res = await ProductService.getRelatedProducts(categoryName, id);
+    if (res.success) setRelatedProducts(res.data);
+  }, [id]);
+
   const fetchProduct = useCallback(async () => {
     if (!id) return;
     const res = await ProductService.getProductById(id);
@@ -39,30 +45,30 @@ const ProductDetailPage = () => {
       if (prod.Variants?.length > 0) {
         setSelectedVolume(prod.Variants[0].volume);
       }
-      fetchRelatedProducts(prod.CategoryId.categoryName);
+      if (prod.CategoryId?.categoryName) {
+        fetchRelatedProducts(prod.CategoryId.categoryName);
+      }
     }
-  }, [id]);
-
-  const fetchRelatedProducts = async (categoryName: string) => {
-    const res = await ProductService.getRelatedProducts(categoryName);
-    if (res.success) setRelatedProducts(res.data);
-  };
+  }, [id, fetchRelatedProducts]);
 
   const checkWishlistStatus = useCallback(async () => {
     if (!id) return;
     const res = await WishlistService.checkInWishlist(id);
-    if (res.success) setWishlistToggle(true);
+    setWishlistToggle(!!res.success);
   }, [id]);
 
   useEffect(() => {
+    setProduct(undefined);
+    setRelatedProducts([]);
+    setSelectedImageIndex(0);
     fetchProduct();
     checkWishlistStatus();
     window.scrollTo(0, 0);
-  }, [fetchProduct, checkWishlistStatus]);
+  }, [id, fetchProduct, checkWishlistStatus]);
 
   useEffect(() => {
     if (!product || !selectedVolume) return;
-    const variant = product.Variants.find((v) => v.volume === selectedVolume);
+    const variant = product.Variants?.find((v) => v.volume === selectedVolume);
     if (variant && product.DiscountPercentage) {
       const finalPrice =
         variant.price - (variant.price * product.DiscountPercentage) / 100;
@@ -73,7 +79,7 @@ const ProductDetailPage = () => {
   }, [selectedVolume, product]);
 
   const handleAddToCart = async () => {
-    const selectedVariant = product?.Variants.find(
+    const selectedVariant = product?.Variants?.find(
       (v) => v.volume === selectedVolume,
     );
     const res = await CartService.addToCart({
@@ -103,7 +109,7 @@ const ProductDetailPage = () => {
     }
   };
 
-  const selectedVariant = product?.Variants.find(
+  const selectedVariant = product?.Variants?.find(
     (v) => v.volume === selectedVolume,
   );
   const isOutOfStock = selectedVariant?.stock === 0;
@@ -156,7 +162,7 @@ const ProductDetailPage = () => {
                     contentClass="!w-full !h-full flex items-center justify-center"
                   >
                     <img
-                      src={product.Images[selectedImageIndex]}
+                      src={product.Images?.[selectedImageIndex]}
                       alt={product.Name}
                       className="relative z-10 w-full h-full object-contain transition-transform duration-1000 group-hover:scale-110"
                     />
@@ -183,7 +189,7 @@ const ProductDetailPage = () => {
 
             {/* Minimalist Thumbnails */}
             <div className="flex justify-center gap-3 overflow-x-auto pb-2 scrollbar-hide">
-              {product.Images.map((url, index) => (
+              {product.Images?.map((url, index) => (
                 <button
                   key={index}
                   onClick={() => setSelectedImageIndex(index)}

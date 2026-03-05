@@ -101,10 +101,10 @@ const ProductCard: React.FC<IProductCardProps> = ({ product }) => {
           </div>
           <div className="flex flex-col items-end">
             <span className="text-lg font-bold text-white font-mono leading-none">
-              ₹{currentVariant.price}
+              ₹{currentVariant?.price || "—"}
             </span>
             <span className="text-[10px] text-white/20 line-through font-mono mt-1">
-              ₹{currentVariant.price + 500}
+              ₹{(currentVariant?.price || 0) + 500}
             </span>
           </div>
         </div>
