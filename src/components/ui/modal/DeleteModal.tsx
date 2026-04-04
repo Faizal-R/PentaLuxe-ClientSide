@@ -1,4 +1,4 @@
-import React from 'react';
+
 import Modal from 'react-modal';
 import { AlertTriangle, X } from 'lucide-react';
 import { pentaluxeTheme } from '@/theme';

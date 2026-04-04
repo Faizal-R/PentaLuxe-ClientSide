@@ -1,4 +1,4 @@
-import React, { ChangeEvent, FormEvent } from "react";
+import  { ChangeEvent, FormEvent } from "react";
 import Modal from "react-modal";
 import { X, MapPin, Check } from "lucide-react";
 import { pentaluxeTheme } from "@/theme";
